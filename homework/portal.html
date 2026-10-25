@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title data-i18n="portal.title">登入交功課</title>
+  <meta name="description" content="李順華老師資源分享網頁 — 登入交功課" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-nav="homework">
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-cn" data-i18n="brand.cn">李順華老師資源分享網頁</span>
+      <span class="brand-en" data-i18n="brand.en">Teacher Li Shun Wah Resources</span>
+    </a>
+    <div class="header-right">
+      <nav class="nav" aria-label="Main">
+        <a href="../index.html" data-nav-id="home" data-i18n="nav.home">首頁 Home</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../homework/index.html" data-nav-id="homework" data-i18n="nav.homework">交功課 Homework</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../resources/index.html" data-nav-id="resources" data-i18n="nav.resources">資源分享 Resources</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../apps/index.html" data-nav-id="apps" data-i18n="nav.apps">有用程式 Apps</a>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-lang="zh" aria-pressed="true" data-i18n="lang.zh">中文</button>
+        <button type="button" data-lang="en" aria-pressed="false" data-i18n="lang.en">EN</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1 data-i18n="portal.title">登入交功課</h1>
+    <p data-i18n="portal.lead">使用老師發放的帳號登入。可以多次提交，每一次都會保留。</p>
+  </div>
+</div>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="../index.html" data-i18n="crumb.home">首頁</a> /
+  <a href="index.html" data-i18n="hub.homework.title">交功課區</a> /
+  <span data-i18n="portal.title">登入交功課</span>
+</nav>
+
+<main class="main">
+  <p id="portal-loading" data-i18n="portal.loading">載入中…</p>
+
+  <section id="portal-login" class="auth-wrap" hidden>
+    <div class="content-panel auth-card">
+      <h2 data-i18n="portal.login.title">登入</h2>
+      <form id="login-form">
+        <div class="field">
+          <label for="login-username" data-i18n="portal.login.username">帳號</label>
+          <input id="login-username" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required />
+        </div>
+        <div class="field">
+          <label for="login-password" data-i18n="portal.login.password">密碼</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <p id="login-error" class="form-error" role="alert" hidden></p>
+        <button class="btn-enter" type="submit" data-i18n="portal.login.submit">登入</button>
+      </form>
+      <p class="auth-help" data-i18n="portal.login.help">帳號由老師建立。學生不能自行註冊，首次登入不用更改密碼。</p>
+      <p class="auth-help" data-i18n="portal.login.mapping">登入時輸入帳號即可。STUDENT 對應 student@homework.local，TEACHER 對應 teacher@homework.local。其他帳號同樣使用小寫帳號 @homework.local。</p>
+    </div>
+  </section>
+
+  <section id="portal-app" hidden>
+    <div class="session-bar">
+      <div>
+        <strong id="session-name"></strong>
+        <span id="session-role" class="role-badge"></span>
+        <span id="session-meta" class="session-meta"></span>
+      </div>
+      <button type="button" id="logout-btn" class="btn-ghost" data-i18n="portal.logout">登出</button>
+    </div>
+    <p id="app-error" class="form-error" role="alert" hidden></p>
+    <p id="app-ok" class="form-ok" role="status" hidden></p>
+
+    <div id="student-view" hidden>
+      <div class="content-panel">
+        <h2 data-i18n="portal.student.heading">我的作業</h2>
+        <p data-i18n="portal.student.lead">選擇作業後提交新版本。舊版本會保留，學生不能刪除。</p>
+        <div class="field">
+          <label for="student-assignment" data-i18n="portal.field.assignment">作業</label>
+          <select id="student-assignment"></select>
+        </div>
+        <p id="student-meta" class="info-note"></p>
+        <form id="submit-form">
+          <div class="field">
+            <label for="submit-link" data-i18n="portal.field.link">連結</label>
+            <input id="submit-link" type="text" inputmode="url" autocomplete="url" data-i18n-placeholder="portal.field.linkPh" placeholder="https://" />
+          </div>
+          <div class="field">
+            <label for="submit-note" data-i18n="portal.field.note">說明</label>
+            <textarea id="submit-note" rows="4" maxlength="4000" data-i18n-placeholder="portal.field.notePh" placeholder="這一次提交的說明"></textarea>
+          </div>
+          <button class="btn-enter" type="submit" id="submit-btn" data-i18n="portal.submit">提交新版本</button>
+        </form>
+        <h3 data-i18n="portal.history">版本紀錄</h3>
+        <div id="history-table" class="table-wrap"></div>
+        <h3 data-i18n="portal.compare">比較版本</h3>
+        <p class="muted" data-i18n="portal.comparePick">勾選兩個版本，並排比較內容。</p>
+        <div id="compare-panel" class="compare-grid"></div>
+      </div>
+    </div>
+
+    <div id="teacher-view" hidden>
+      <div class="portal-tabs" role="tablist">
+        <button type="button" class="portal-tab" role="tab" data-tab="accounts" aria-selected="true" data-i18n="portal.teacher.accounts">帳號管理</button>
+        <button type="button" class="portal-tab" role="tab" data-tab="assignments" aria-selected="false" data-i18n="portal.teacher.assignments">作業設定</button>
+        <button type="button" class="portal-tab" role="tab" data-tab="roster" aria-selected="false" data-i18n="portal.teacher.roster">全班檢視</button>
+      </div>
+
+      <section id="tab-accounts" role="tabpanel">
+        <div class="content-panel">
+          <p data-i18n="portal.accounts.lead">建立學生或老師帳號。密碼由老師設定，不會強制首次登入後更改。</p>
+          <form id="create-form" class="form-grid">
+            <div class="field">
+              <label for="create-username" data-i18n="portal.accounts.username">帳號</label>
+              <input id="create-username" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+            </div>
+            <div class="field">
+              <label for="create-password" data-i18n="portal.accounts.password">密碼</label>
+              <input id="create-password" type="password" autocomplete="new-password" minlength="8" maxlength="72" required />
+            </div>
+            <div class="field">
+              <label for="create-role" data-i18n="portal.accounts.role">身份</label>
+              <select id="create-role">
+                <option value="student" data-i18n="portal.role.student">學生</option>
+                <option value="teacher" data-i18n="portal.role.teacher">老師</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="create-class" data-i18n="portal.accounts.class">班別</label>
+              <input id="create-class" maxlength="16" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="create-seat" data-i18n="portal.accounts.seat">座號</label>
+              <input id="create-seat" maxlength="8" autocomplete="off" />
+            </div>
+            <label class="check-field span-2">
+              <input id="create-show-password" type="checkbox" />
+              <span data-i18n="portal.accounts.showPassword">顯示密碼</span>
+            </label>
+            <p class="muted span-2" data-i18n="portal.accounts.passwordHint">至少 8 個字元。設定後即為固定密碼。</p>
+            <div class="span-2">
+              <button class="btn-enter" type="submit" data-i18n="portal.accounts.create">建立帳號</button>
+            </div>
+          </form>
+          <h3 data-i18n="portal.accounts.list">已建立帳號</h3>
+          <div id="account-table" class="table-wrap"></div>
+          <form id="edit-form" hidden>
+            <h3 id="edit-heading"></h3>
+            <div class="form-grid">
+              <div class="field">
+                <label for="edit-role" data-i18n="portal.accounts.role">身份</label>
+                <select id="edit-role">
+                  <option value="student" data-i18n="portal.role.student">學生</option>
+                  <option value="teacher" data-i18n="portal.role.teacher">老師</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="edit-status" data-i18n="portal.accounts.status">狀態</label>
+                <select id="edit-status">
+                  <option value="active" data-i18n="portal.status.active">啟用</option>
+                  <option value="disabled" data-i18n="portal.status.disabled">停用</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="edit-class" data-i18n="portal.accounts.class">班別</label>
+                <input id="edit-class" maxlength="16" />
+              </div>
+              <div class="field">
+                <label for="edit-seat" data-i18n="portal.accounts.seat">座號</label>
+                <input id="edit-seat" maxlength="8" />
+              </div>
+              <div class="field span-2">
+                <label for="edit-password" data-i18n="portal.accounts.newPassword">新密碼（留空則不改）</label>
+                <input id="edit-password" type="password" autocomplete="new-password" minlength="8" maxlength="72" />
+              </div>
+              <div class="span-2">
+                <button class="btn-enter" type="submit" data-i18n="portal.accounts.save">儲存變更</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="tab-assignments" role="tabpanel" hidden>
+        <div class="content-panel">
+          <p data-i18n="portal.assign.lead">設定班別、標題、截止日期與遲交倍數。時間以香港時間計算。</p>
+          <form id="assignment-form" class="form-grid">
+            <input id="assignment-id" type="hidden" />
+            <div class="field">
+              <label for="assignment-class" data-i18n="portal.assign.class">班別</label>
+              <input id="assignment-class" maxlength="16" required />
+            </div>
+            <div class="field">
+              <label for="assignment-title" data-i18n="portal.assign.titleField">標題</label>
+              <input id="assignment-title" maxlength="120" required />
+            </div>
+            <div class="field">
+              <label for="assignment-due" data-i18n="portal.assign.due">截止日期</label>
+              <input id="assignment-due" type="datetime-local" />
+            </div>
+            <div class="field">
+              <label for="assignment-factor" data-i18n="portal.assign.factor">遲交分數倍數</label>
+              <input id="assignment-factor" type="number" min="0" max="1" step="0.05" value="0.8" required />
+            </div>
+            <label class="check-field span-2">
+              <input id="assignment-late" type="checkbox" checked />
+              <span data-i18n="portal.assign.acceptLate">接受遲交</span>
+            </label>
+            <p class="muted span-2" data-i18n="portal.assign.hk">香港時間</p>
+            <div class="span-2 actions">
+              <button class="btn-enter" type="submit" data-i18n="portal.assign.save">儲存作業</button>
+              <button class="btn-ghost" type="button" id="assignment-reset" data-i18n="portal.assign.new">改為新增</button>
+            </div>
+          </form>
+          <div id="assignment-table" class="table-wrap"></div>
+        </div>
+      </section>
+
+      <section id="tab-roster" role="tabpanel" hidden>
+        <div class="content-panel">
+          <p data-i18n="portal.roster.lead">查看該班每一位學生的版本。老師只可軟刪除，不能永久刪除。</p>
+          <div class="field">
+            <label for="roster-assignment" data-i18n="portal.roster.pick">選擇作業</label>
+            <select id="roster-assignment"></select>
+          </div>
+          <div id="roster-table" class="table-wrap"></div>
+          <h3 data-i18n="portal.compare">比較版本</h3>
+          <p class="muted" data-i18n="portal.comparePick">勾選兩個版本，並排比較內容。</p>
+          <div id="roster-compare" class="compare-grid"></div>
+        </div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p><strong data-i18n="brand.cn">李順華老師資源分享網頁</strong></p>
+  <p data-i18n="footer">李順華老師資源分享網頁 · 僅供校內預覽 · 連結待補</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+<script src="../js/i18n.js" defer></script>
+<script src="../js/main.js" defer></script>
+<script src="../js/supabase-config.js" defer></script>
+<script src="../js/homework-portal.js" defer></script>
+</body>
+</html>
