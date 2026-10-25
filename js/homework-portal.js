@@ -2,6 +2,8 @@
  * Authenticated homework portal for the static Pages site.
  * Username STUDENT -> student@homework.local, TEACHER -> teacher@homework.local.
  * Any other provisioned username uses lower(username)@homework.local.
+ * The form asks for a username. Confirm email is disabled on the project,
+ * so these addresses are only the Auth identity used by signInWithPassword.
  */
 (function () {
   var cfg = window.HOMEWORK_SUPABASE;

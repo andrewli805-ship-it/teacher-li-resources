@@ -48,7 +48,16 @@ Sign-in asks for a username, not an email. The static client maps it to a Supaba
 | `TEACHER` (any case) | `teacher@homework.local` |
 | any other provisioned username | lower-case username `@homework.local` |
 
-`lower(username)@homework.local` is the only rule. The demo rows follow it. On the live project, profile `STUDENT` is a student in class `2D`, seat `1`, and profile `TEACHER` is a teacher. Passwords are stored only in Supabase Auth. They are not in this repository, and the first sign-in does not ask for a new password.
+`lower(username)@homework.local` is the only rule. The login form stays a username field; the mapping lives in `js/homework-portal.js`. Confirm email is disabled on the live project (`mailer_autoconfirm`), so sign-in does not wait for a confirmation message.
+
+These profiles already exist in project `juxxddgkownhkxuofdjl`. This pull request does not create Auth users:
+
+| Username | Auth email | Role | Profile | Auth user id |
+| --- | --- | --- | --- | --- |
+| `STUDENT` | `student@homework.local` | student | class `2D`, seat `12` | `b81d5de7-008c-4bd9-bcde-a9bbbcccbe7a` |
+| `TEACHER` | `teacher@homework.local` | teacher | no class | `1bfd84c0-bcf8-4947-92d3-02e8658d2961` |
+
+Passwords are stored only in Supabase Auth. They are not in this repository, and the first sign-in does not ask for a new password.
 
 Roles are `student` and `teacher`. A teacher creates further accounts from 帳號管理 / Accounts. That calls the `provision-account` edge function, which holds the server key outside git. The browser only has the publishable key in `js/supabase-config.js`.
 
