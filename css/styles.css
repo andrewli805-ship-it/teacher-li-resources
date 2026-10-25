@@ -420,9 +420,67 @@ img {
   font-size: 1.15rem;
 }
 
+.page-hero .page-kicker {
+  display: inline-block;
+  margin: 0 0 0.6rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(232, 168, 56, 0.18);
+  color: var(--amber);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  opacity: 1;
+}
+
+.hw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 0.25rem 0 1.35rem;
+}
+
+.hw-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 1rem 1.05rem 1.05rem;
+  background: var(--gray-50);
+  border-top: 3px solid var(--teal);
+}
+
+.hw-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--navy);
+}
+
+.hw-card .btn-enter {
+  margin-top: 0.75rem;
+}
+
 .content-panel p {
   margin: 0 0 0.85rem;
   color: var(--gray-700);
+}
+
+.content-panel .hw-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  flex: 1;
+}
+
+.content-panel p.info-note {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  color: var(--navy);
+  font-size: 0.88rem;
+  margin: 0.5rem 0 1.15rem;
 }
 
 .placeholder-note {
@@ -529,7 +587,8 @@ img {
   }
 
   .card-grid,
-  .hub-grid {
+  .hub-grid,
+  .hw-grid {
     grid-template-columns: 1fr;
   }
 }
