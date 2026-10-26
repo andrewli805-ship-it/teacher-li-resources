@@ -36,9 +36,17 @@ Submissions stay in the browser that created them:
 
 This is the same limitation as the original Google Site embed. Another device or browser cannot see the list, and clearing site data deletes it. Export the Excel list from the browser that holds the submissions. The two classes do not share a key, so they do not overwrite each other.
 
+## Who can do what
+
+No sign-in is required to browse the home page, subject resources, app notes, or the AI mini-game exhibitions. Playing a submitted game stays public.
+
+Sign-in is required to submit or overwrite homework, to see your own version history, and for teacher tools (accounts, deadlines, class view, soft-delete). The header control on every main page is **登入 Login**. After sign-in it shows the username and **登出**. Exhibition pages keep a **提交作品** link to `homework/portal.html?next=` the current page. That `next` value is only used as a same-site return path (for example 「先去玩小遊戲」); it is not an open redirect.
+
+Unauthenticated visitors who try to save the in-browser exhibition roster are sent to the portal login. The roster still lives in this browser after a successful sign-in. Official versioned homework is the portal.
+
 ## Homework portal (phase 1)
 
-Signed-in homework lives at `homework/portal.html`. The homepage and the homework hub both link to it. The 2627 AI game showcase pages are unchanged and still keep their lists in this browser only.
+Signed-in homework lives at `homework/portal.html`. The homepage and the homework hub both link to it. The 2627 AI game showcase pages stay public for browsing and play. Their lists still stay in this browser only, and saving a card requires sign-in.
 
 Sign-in asks for a username, not an email. The static client maps it to a Supabase Auth email:
 

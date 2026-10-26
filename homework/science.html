@@ -28,6 +28,15 @@
         <button type="button" data-lang="zh" aria-pressed="true" data-i18n="lang.zh">中文</button>
         <button type="button" data-lang="en" aria-pressed="false" data-i18n="lang.en">EN</button>
       </div>
+      <div class="site-auth" data-portal="portal.html">
+        <div class="site-auth-guest">
+          <a class="btn-login" href="portal.html" data-i18n="auth.login">登入 Login</a>
+        </div>
+        <div class="site-auth-user" hidden>
+          <span class="site-auth-name"></span>
+          <button type="button" class="btn-logout" data-i18n="auth.logout">登出</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -52,6 +61,7 @@
     <ul class="ext-links">
       <li>Science homework portal <span class="tag-pending" data-i18n="pending">待補</span></li>
     </ul>
+    <p><a class="btn-enter" href="portal.html" data-auth-submit data-i18n="auth.submitWork">提交作品</a></p>
     <p><a class="btn-enter" href="index.html" data-i18n="back.hub">返回本區目錄</a></p>
   </div>
 </main>
@@ -60,7 +70,10 @@
   <p><strong data-i18n="brand.cn">李順華老師資源分享網頁</strong></p>
   <p data-i18n="footer">李順華老師資源分享網頁 · 僅供校內預覽 · 連結待補</p>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
 <script src="../js/i18n.js" defer></script>
 <script src="../js/main.js" defer></script>
+<script src="../js/supabase-config.js" defer></script>
+<script src="../js/site-auth.js" defer></script>
 </body>
 </html>

@@ -7,15 +7,19 @@
  */
 (function () {
   var cfg = window.HOMEWORK_SUPABASE;
-  if (!cfg || !window.supabase || !window.TeacherLiI18n) return;
+  if (!window.TeacherLiI18n) return;
 
-  var client = window.supabase.createClient(cfg.url, cfg.publishableKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false,
-    },
-  });
+  var client = window.TeacherLiAuth && window.TeacherLiAuth.client;
+  if (!client) {
+    if (!cfg || !window.supabase) return;
+    client = window.supabase.createClient(cfg.url, cfg.publishableKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+    });
+  }
 
   var USERNAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$/;
   var CLASS_RE = /^[A-Za-z0-9_-]{1,16}$/;
@@ -573,8 +577,49 @@
     await loadRoster();
   }
 
+  function applyNextLinks() {
+    var play = $("login-play");
+    if (!play || !window.TeacherLiAuth) return;
+    var params = new URLSearchParams(window.location.search);
+    var next = window.TeacherLiAuth.safeNext(params.get("next"));
+    if (next && /\/homework\/(ai-game-|ict\.html)/.test(next)) {
+      play.setAttribute("href", next);
+      return;
+    }
+    play.setAttribute("href", "ict.html");
+  }
+
+  function showLogin(message) {
+    document.body.classList.add("portal-gate");
+    show($("portal-app"), false);
+    show($("portal-loading"), false);
+    show($("portal-login"), true);
+    applyNextLinks();
+    if (typeof message === "string") setMessage($("login-error"), message);
+    document.title = t("auth.formTitle");
+  }
+
+  async function ensureSession(role) {
+    if (!state.profile) {
+      showLogin("");
+      return false;
+    }
+    if (role && state.profile.role !== role) {
+      setMessage($("app-error"), t(role === "teacher" ? "portal.error.teacher_only" : "portal.error.generic"));
+      return false;
+    }
+    var result = await client.auth.getSession();
+    if (result.error || !result.data.session) {
+      await signOut("");
+      return false;
+    }
+    return true;
+  }
+
   async function enterApp() {
     renderSession();
+    document.body.classList.remove("portal-gate");
+    document.title = t("portal.hero");
     show($("portal-login"), false);
     show($("portal-loading"), false);
     show($("portal-app"), true);
@@ -594,17 +639,12 @@
   async function signOut(messageKey) {
     state.profile = null;
     await client.auth.signOut();
-    show($("portal-app"), false);
-    show($("portal-loading"), false);
-    show($("portal-login"), true);
-    setMessage($("login-error"), messageKey ? t(messageKey) : "");
+    showLogin(messageKey ? t(messageKey) : "");
   }
 
   async function adoptSession(session) {
     if (!session) {
-      show($("portal-loading"), false);
-      show($("portal-login"), true);
-      show($("portal-app"), false);
+      showLogin("");
       return;
     }
     var result = await client
@@ -626,6 +666,7 @@
   }
 
   async function softDelete(row) {
+    if (!(await ensureSession("teacher"))) return;
     if (!row.soft_deleted_at && !window.confirm(t("portal.confirmDelete"))) return;
     setMessage($("app-error"), "");
     var patch = row.soft_deleted_at
@@ -696,10 +737,23 @@
       }
     });
 
+    var passwordToggle = $("login-password-toggle");
+    if (passwordToggle) {
+      passwordToggle.setAttribute("aria-label", t("auth.showPassword"));
+      passwordToggle.addEventListener("click", function () {
+        var input = $("login-password");
+        var showPw = input.type === "password";
+        input.type = showPw ? "text" : "password";
+        this.setAttribute("aria-pressed", showPw ? "true" : "false");
+        this.setAttribute("aria-label", t(showPw ? "auth.hidePassword" : "auth.showPassword"));
+      });
+    }
+
     $("submit-form").addEventListener("submit", async function (event) {
       event.preventDefault();
       setMessage($("app-error"), "");
       setMessage($("app-ok"), "");
+      if (!(await ensureSession("student"))) return;
       var assignment = assignmentById($("student-assignment").value);
       if (!assignment) return;
       var link = $("submit-link").value.trim();
@@ -748,6 +802,7 @@
       event.preventDefault();
       setMessage($("app-error"), "");
       setMessage($("app-ok"), "");
+      if (!(await ensureSession("teacher"))) return;
       var username = $("create-username").value.trim();
       var classCode = cleanClass($("create-class").value, $("create-role").value === "student");
       var seat = cleanSeat($("create-seat").value);
@@ -783,6 +838,7 @@
       if (!state.editingId) return;
       setMessage($("app-error"), "");
       setMessage($("app-ok"), "");
+      if (!(await ensureSession("teacher"))) return;
       var classCode = cleanClass($("edit-class").value, $("edit-role").value === "student");
       var seat = cleanSeat($("edit-seat").value);
       if (classCode == null || seat == null) {
@@ -831,6 +887,7 @@
       event.preventDefault();
       setMessage($("app-error"), "");
       setMessage($("app-ok"), "");
+      if (!(await ensureSession("teacher"))) return;
       var classCode = cleanClass($("assignment-class").value, true);
       var title = $("assignment-title").value.trim();
       var factor = Number($("assignment-factor").value);
@@ -881,7 +938,16 @@
     });
 
     document.addEventListener("langchange", function () {
-      if (!state.profile) return;
+      var toggle = $("login-password-toggle");
+      if (toggle && $("login-password")) {
+        var showing = $("login-password").type === "text";
+        toggle.setAttribute("aria-label", t(showing ? "auth.hidePassword" : "auth.showPassword"));
+      }
+      if (!state.profile) {
+        document.title = t("auth.formTitle");
+        return;
+      }
+      document.title = t("portal.hero");
       renderSession();
       if (state.profile.role === "teacher") {
         renderAccounts();
@@ -893,11 +959,17 @@
       }
     });
 
+    client.auth.onAuthStateChange(function (event) {
+      if (event !== "SIGNED_OUT") return;
+      state.profile = null;
+      var login = $("portal-login");
+      if (login && !login.hidden) return;
+      showLogin();
+    });
+
     client.auth.getSession().then(function (result) {
       adoptSession(result.data.session).catch(function (error) {
-        setMessage($("login-error"), errorText(error));
-        show($("portal-loading"), false);
-        show($("portal-login"), true);
+        showLogin(errorText(error));
       });
     });
   });

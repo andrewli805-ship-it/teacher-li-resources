@@ -44,6 +44,7 @@
       lblUrl: "AI 遊戲網頁連結 (URL)",
       phUrl: "https://example.com/my-ai-game",
       btnSubmit: "提交",
+      submitWork: "提交作品",
       btnSaveEdit: "儲存修改",
       phSearch: "🔍 搜尋座號或姓名...",
       optAll: "顯示全部 (40位)",
@@ -96,6 +97,7 @@
       lblUrl: "AI Game Web URL",
       phUrl: "https://example.com/my-ai-game",
       btnSubmit: "Submit",
+      submitWork: "Submit work",
       btnSaveEdit: "Save Changes",
       phSearch: "🔍 Search seat or name...",
       optAll: "Show All (40 Seats)",
@@ -246,6 +248,46 @@
     document.getElementById("exportModalDesc").textContent = t.exportModalDesc;
     document.getElementById("btnDownloadCsv").textContent = t.btnDownloadCsv;
     document.getElementById("btnCloseExport").textContent = t.btnClose;
+    var here = window.location.pathname + window.location.search + window.location.hash;
+    document.querySelectorAll(".submit-work-cta").forEach(function (link) {
+      link.textContent = t.submitWork;
+      if (window.TeacherLiAuth) link.setAttribute("href", window.TeacherLiAuth.loginUrl(here));
+    });
+  }
+
+  function redirectToLogin() {
+    var here = window.location.pathname + window.location.search + window.location.hash;
+    if (window.TeacherLiAuth) {
+      window.location.href = window.TeacherLiAuth.loginUrl(here);
+      return;
+    }
+    window.location.href = "portal.html?next=" + encodeURIComponent(here);
+  }
+
+  function withSession(action) {
+    var auth = window.TeacherLiAuth;
+    if (!auth || typeof auth.getSession !== "function") {
+      redirectToLogin();
+      return;
+    }
+    auth.getSession().then(function (session) {
+      if (!session) {
+        redirectToLogin();
+        return;
+      }
+      action();
+    }).catch(function () {
+      redirectToLogin();
+    });
+  }
+
+  function setFormLocked(locked) {
+    ["studentNo", "studentName", "gameUrl"].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.disabled = !!locked;
+    });
+    var submitBtn = document.getElementById("submitBtn");
+    if (submitBtn) submitBtn.disabled = false;
   }
 
   function renderGrid() {
@@ -337,6 +379,13 @@
   }
 
   function prepareAdd(no) {
+    withSession(function () {
+      prepareAddAuthed(no);
+    });
+  }
+
+  function prepareAddAuthed(no) {
+    setFormLocked(false);
     cancelEdit();
     document.getElementById("studentNo").value = String(no);
     document.getElementById("studentName").focus();
@@ -347,6 +396,13 @@
   }
 
   function editSubmission(no) {
+    withSession(function () {
+      editSubmissionAuthed(no);
+    });
+  }
+
+  function editSubmissionAuthed(no) {
+    setFormLocked(false);
     const data = submissions[no];
     const t = i18n[currentLang];
     if (!data) return;
@@ -394,6 +450,10 @@
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    withSession(saveSubmission);
+  });
+
+  function saveSubmission() {
     const t = i18n[currentLang];
     const no = Number(document.getElementById("studentNo").value);
     const name = document.getElementById("studentName").value.trim();
@@ -424,7 +484,7 @@
     cancelEdit();
     renderGrid();
     alert(fill(t.alertSaveSuccess, { no: no, name: name }));
-  });
+  }
 
   function applyFilters() {
     renderGrid();
@@ -566,4 +626,12 @@
 
   updateStaticText();
   renderGrid();
+  setFormLocked(true);
+  if (window.TeacherLiAuth) {
+    window.TeacherLiAuth.getSession().then(function (session) {
+      setFormLocked(!session);
+    }).catch(function () {
+      setFormLocked(true);
+    });
+  }
 })();
