@@ -25,7 +25,7 @@
     zh: {
       appTitle: "🎮 AI 小遊戲作品展覽館",
       appSubtitle:
-        "請同學們輸入自己的座號、姓名及 AI 遊戲網頁連結。若需修改資料，只需點擊卡片上的「修改資料」或重新輸入該座號送出即可！",
+        "參觀及遊玩無須登入。提交或覆寫作品需要登入。登入後可在這部瀏覽器更新展覽名單。",
       classLabel: CONFIG.labelZh || "",
       docTitle: (CONFIG.labelZh || "") + " · AI 小遊戲作品展覽館",
       storageNote:
@@ -44,6 +44,8 @@
       lblUrl: "AI 遊戲網頁連結 (URL)",
       phUrl: "https://example.com/my-ai-game",
       btnSubmit: "提交",
+      submitWork: "提交作品",
+      authNote: "參觀／遊玩遊戲免登入。提交作品／交功課需登入。",
       btnSaveEdit: "儲存修改",
       phSearch: "🔍 搜尋座號或姓名...",
       optAll: "顯示全部 (40位)",
@@ -77,7 +79,7 @@
     en: {
       appTitle: "🎮 AI Mini-Game Showcase Platform",
       appSubtitle:
-        "Students, please enter your seat number, name, and AI game web URL. To edit your submission, click 'Edit' on your card or submit again with the same seat number!",
+        "Browse and play with no sign-in. Sign in to submit or overwrite a work. After sign-in you can update the list stored in this browser.",
       classLabel: CONFIG.labelEn || "",
       docTitle: (CONFIG.labelEn || "") + " · AI Mini-Game Showcase",
       storageNote:
@@ -96,6 +98,8 @@
       lblUrl: "AI Game Web URL",
       phUrl: "https://example.com/my-ai-game",
       btnSubmit: "Submit",
+      submitWork: "Submit work",
+      authNote: "Browse and play with no sign-in. Sign in to submit homework.",
       btnSaveEdit: "Save Changes",
       phSearch: "🔍 Search seat or name...",
       optAll: "Show All (40 Seats)",
@@ -246,6 +250,48 @@
     document.getElementById("exportModalDesc").textContent = t.exportModalDesc;
     document.getElementById("btnDownloadCsv").textContent = t.btnDownloadCsv;
     document.getElementById("btnCloseExport").textContent = t.btnClose;
+    var authNote = document.getElementById("authNote");
+    if (authNote) authNote.textContent = t.authNote;
+    var here = window.location.pathname + window.location.search + window.location.hash;
+    document.querySelectorAll(".submit-work-cta").forEach(function (link) {
+      link.textContent = t.submitWork;
+      if (window.TeacherLiAuth) link.setAttribute("href", window.TeacherLiAuth.loginUrl(here));
+    });
+  }
+
+  function redirectToLogin() {
+    var here = window.location.pathname + window.location.search + window.location.hash;
+    if (window.TeacherLiAuth) {
+      window.location.href = window.TeacherLiAuth.loginUrl(here);
+      return;
+    }
+    window.location.href = "portal.html?next=" + encodeURIComponent(here);
+  }
+
+  function withSession(action) {
+    var auth = window.TeacherLiAuth;
+    if (!auth || typeof auth.getSession !== "function") {
+      redirectToLogin();
+      return;
+    }
+    auth.getSession().then(function (session) {
+      if (!session) {
+        redirectToLogin();
+        return;
+      }
+      action();
+    }).catch(function () {
+      redirectToLogin();
+    });
+  }
+
+  function setFormLocked(locked) {
+    ["studentNo", "studentName", "gameUrl", "submitBtn"].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (node) node.disabled = !!locked;
+    });
+    var note = document.getElementById("authNote");
+    if (note) note.hidden = !locked;
   }
 
   function renderGrid() {
@@ -337,6 +383,13 @@
   }
 
   function prepareAdd(no) {
+    withSession(function () {
+      prepareAddAuthed(no);
+    });
+  }
+
+  function prepareAddAuthed(no) {
+    setFormLocked(false);
     cancelEdit();
     document.getElementById("studentNo").value = String(no);
     document.getElementById("studentName").focus();
@@ -347,6 +400,13 @@
   }
 
   function editSubmission(no) {
+    withSession(function () {
+      editSubmissionAuthed(no);
+    });
+  }
+
+  function editSubmissionAuthed(no) {
+    setFormLocked(false);
     const data = submissions[no];
     const t = i18n[currentLang];
     if (!data) return;
@@ -394,6 +454,10 @@
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    withSession(saveSubmission);
+  });
+
+  function saveSubmission() {
     const t = i18n[currentLang];
     const no = Number(document.getElementById("studentNo").value);
     const name = document.getElementById("studentName").value.trim();
@@ -424,7 +488,7 @@
     cancelEdit();
     renderGrid();
     alert(fill(t.alertSaveSuccess, { no: no, name: name }));
-  });
+  }
 
   function applyFilters() {
     renderGrid();
@@ -566,4 +630,12 @@
 
   updateStaticText();
   renderGrid();
+  setFormLocked(true);
+  if (window.TeacherLiAuth) {
+    window.TeacherLiAuth.getSession().then(function (session) {
+      setFormLocked(!session);
+    }).catch(function () {
+      setFormLocked(true);
+    });
+  }
 })();

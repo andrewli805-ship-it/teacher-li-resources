@@ -28,6 +28,16 @@
         <button type="button" data-lang="zh" aria-pressed="true" data-i18n="lang.zh">中文</button>
         <button type="button" data-lang="en" aria-pressed="false" data-i18n="lang.en">EN</button>
       </div>
+      <div class="site-auth" data-portal="../homework/portal.html">
+        <div class="site-auth-guest">
+          <a class="btn-login" href="../homework/portal.html" data-i18n="auth.login">登入 Login</a>
+          <p class="site-auth-hint" data-i18n="auth.hint">交功課需登入，小遊戲公開可玩</p>
+        </div>
+        <div class="site-auth-user" hidden>
+          <span class="site-auth-name"></span>
+          <button type="button" class="btn-logout" data-i18n="auth.logout">登出</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -82,7 +92,10 @@
   <p><strong data-i18n="brand.cn">李順華老師資源分享網頁</strong></p>
   <p data-i18n="footer">李順華老師資源分享網頁 · 僅供校內預覽 · 連結待補</p>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
 <script src="../js/i18n.js" defer></script>
 <script src="../js/main.js" defer></script>
+<script src="../js/supabase-config.js" defer></script>
+<script src="../js/site-auth.js" defer></script>
 </body>
 </html>

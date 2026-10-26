@@ -45,7 +45,8 @@
   <div class="max-w-7xl mx-auto space-y-8">
     <div class="flex justify-between items-center border-b border-slate-200 pb-3 gap-3 flex-wrap">
       <a id="backLink" href="ict.html" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">← 返回 ICT 交功課</a>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 flex-wrap justify-end">
+        <a class="submit-work-cta inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 shadow-sm" href="portal.html" data-auth-submit>提交作品</a>
         <div class="flex items-center space-x-2">
           <span class="text-xl" aria-hidden="true">🌐</span>
           <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Language / 語言:</span>
@@ -69,6 +70,7 @@
       <p id="appSubtitle" class="text-slate-600 max-w-2xl mx-auto text-sm md:text-base">
         請同學們輸入自己的座號、姓名及 AI 遊戲網頁連結。若需修改資料，只需點擊卡片上的「修改資料」或重新輸入該座號送出即可！
       </p>
+      <p id="authNote" class="text-sm text-indigo-800 max-w-2xl mx-auto">參觀／遊玩遊戲免登入。提交作品／交功課需登入。</p>
       <p id="storageNote" class="text-xs text-slate-500 max-w-2xl mx-auto">
         資料只儲存在這部瀏覽器。換電腦、換瀏覽器或清除網站資料後便會消失，請使用同一瀏覽器查看及匯出。
       </p>
@@ -98,20 +100,20 @@
       <form id="submitForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div>
           <label id="lblSeat" for="studentNo" class="block text-xs font-bold text-slate-600 mb-1">座號 (1-40)</label>
-          <input type="number" id="studentNo" min="1" max="40" step="1" required
+          <input type="number" id="studentNo" min="1" max="40" step="1" required disabled
             class="w-full px-4 py-2 text-slate-800 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition" />
         </div>
         <div>
           <label id="lblName" for="studentName" class="block text-xs font-bold text-slate-600 mb-1">學生姓名</label>
-          <input type="text" id="studentName" required maxlength="80"
+          <input type="text" id="studentName" required maxlength="80" disabled
             class="w-full px-4 py-2 text-slate-800 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition" />
         </div>
         <div class="sm:col-span-2">
           <label id="lblUrl" for="gameUrl" class="block text-xs font-bold text-slate-600 mb-1">AI 遊戲網頁連結 (URL)</label>
           <div class="flex gap-2">
-            <input type="url" id="gameUrl" required
+            <input type="url" id="gameUrl" required disabled
               class="w-full px-4 py-2 text-slate-800 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition" />
-            <button type="submit" id="submitBtn"
+            <button type="submit" id="submitBtn" disabled
               class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-xl shadow-sm transition shrink-0">
               提交
             </button>
@@ -161,6 +163,9 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+  <script src="../js/supabase-config.js"></script>
+  <script src="../js/site-auth.js"></script>
   <script src="ai-game.js"></script>
 </body>
 </html>
