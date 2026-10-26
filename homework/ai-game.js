@@ -25,7 +25,7 @@
     zh: {
       appTitle: "🎮 AI 小遊戲作品展覽館",
       appSubtitle:
-        "參觀及遊玩無須登入。提交或覆寫作品需要登入。登入後可在這部瀏覽器更新展覽名單。",
+        "請同學們輸入自己的座號、姓名及 AI 遊戲網頁連結。若需修改資料，只需點擊卡片上的「修改資料」或重新輸入該座號送出即可！",
       classLabel: CONFIG.labelZh || "",
       docTitle: (CONFIG.labelZh || "") + " · AI 小遊戲作品展覽館",
       storageNote:
@@ -45,7 +45,6 @@
       phUrl: "https://example.com/my-ai-game",
       btnSubmit: "提交",
       submitWork: "提交作品",
-      authNote: "參觀／遊玩遊戲免登入。提交作品／交功課需登入。",
       btnSaveEdit: "儲存修改",
       phSearch: "🔍 搜尋座號或姓名...",
       optAll: "顯示全部 (40位)",
@@ -79,7 +78,7 @@
     en: {
       appTitle: "🎮 AI Mini-Game Showcase Platform",
       appSubtitle:
-        "Browse and play with no sign-in. Sign in to submit or overwrite a work. After sign-in you can update the list stored in this browser.",
+        "Students, please enter your seat number, name, and AI game web URL. To edit your submission, click 'Edit' on your card or submit again with the same seat number!",
       classLabel: CONFIG.labelEn || "",
       docTitle: (CONFIG.labelEn || "") + " · AI Mini-Game Showcase",
       storageNote:
@@ -99,7 +98,6 @@
       phUrl: "https://example.com/my-ai-game",
       btnSubmit: "Submit",
       submitWork: "Submit work",
-      authNote: "Browse and play with no sign-in. Sign in to submit homework.",
       btnSaveEdit: "Save Changes",
       phSearch: "🔍 Search seat or name...",
       optAll: "Show All (40 Seats)",
@@ -250,8 +248,6 @@
     document.getElementById("exportModalDesc").textContent = t.exportModalDesc;
     document.getElementById("btnDownloadCsv").textContent = t.btnDownloadCsv;
     document.getElementById("btnCloseExport").textContent = t.btnClose;
-    var authNote = document.getElementById("authNote");
-    if (authNote) authNote.textContent = t.authNote;
     var here = window.location.pathname + window.location.search + window.location.hash;
     document.querySelectorAll(".submit-work-cta").forEach(function (link) {
       link.textContent = t.submitWork;
@@ -292,8 +288,6 @@
     });
     var submitBtn = document.getElementById("submitBtn");
     if (submitBtn) submitBtn.disabled = false;
-    var note = document.getElementById("authNote");
-    if (note) note.hidden = !locked;
   }
 
   function renderGrid() {

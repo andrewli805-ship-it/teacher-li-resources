@@ -228,15 +228,6 @@ img {
   background: var(--gray-50);
 }
 
-.site-auth-hint {
-  margin: 0;
-  max-width: 11.5rem;
-  font-size: 0.68rem;
-  line-height: 1.35;
-  color: var(--gray-500);
-  text-align: center;
-}
-
 /* —— Hero —— */
 .hero {
   background: var(--navy);
@@ -1069,17 +1060,11 @@ body.portal-gate #portal-loading[hidden],
 }
 
 .login-brand-inner h1 {
-  margin: 0 0 0.85rem;
+  margin: 0 0 2.2rem;
   font-size: clamp(1.7rem, 3vw, 2.15rem);
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1.35;
-}
-
-.login-brand-inner p {
-  margin: 0 0 2.4rem;
-  font-size: 1.02rem;
-  font-weight: 600;
 }
 
 .login-icons {
@@ -1135,15 +1120,9 @@ body.portal-gate #portal-loading[hidden],
 .login-rule {
   width: 4.5rem;
   height: 3px;
-  margin: 0.55rem auto 0.95rem;
+  margin: 0.55rem auto 1.45rem;
   border-radius: 999px;
   background: var(--amber);
-}
-
-.login-note {
-  margin: 0 0 1.45rem;
-  color: var(--gray-700);
-  font-size: 0.95rem;
 }
 
 .login-form-card .form-error {
@@ -1251,8 +1230,8 @@ body.portal-gate #portal-loading[hidden],
     padding: 2.4rem 1.25rem 2rem;
   }
 
-  .login-brand-inner p {
-    margin-bottom: 1.5rem;
+  .login-brand-inner h1 {
+    margin-bottom: 1.4rem;
   }
 
   .login-icons svg {
