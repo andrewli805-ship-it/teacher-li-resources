@@ -97,7 +97,7 @@
         </button>
       </div>
 
-      <form id="submitForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <form id="submitForm" onsubmit="return false" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div>
           <label id="lblSeat" for="studentNo" class="block text-xs font-bold text-slate-600 mb-1">座號 (1-40)</label>
           <input type="number" id="studentNo" min="1" max="40" step="1" required disabled
@@ -113,7 +113,7 @@
           <div class="flex gap-2">
             <input type="url" id="gameUrl" required disabled
               class="w-full px-4 py-2 text-slate-800 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition" />
-            <button type="submit" id="submitBtn" disabled
+            <button type="submit" id="submitBtn"
               class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-xl shadow-sm transition shrink-0">
               提交
             </button>

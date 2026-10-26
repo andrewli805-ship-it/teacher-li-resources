@@ -286,10 +286,12 @@
   }
 
   function setFormLocked(locked) {
-    ["studentNo", "studentName", "gameUrl", "submitBtn"].forEach(function (id) {
+    ["studentNo", "studentName", "gameUrl"].forEach(function (id) {
       var node = document.getElementById(id);
       if (node) node.disabled = !!locked;
     });
+    var submitBtn = document.getElementById("submitBtn");
+    if (submitBtn) submitBtn.disabled = false;
     var note = document.getElementById("authNote");
     if (note) note.hidden = !locked;
   }
