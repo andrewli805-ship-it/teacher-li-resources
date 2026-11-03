@@ -14,11 +14,12 @@ Then open: http://127.0.0.1:8765/
 
 - `index.html` — homepage
 - `homework/` — hub + ICT / DT / Science
-  - `homework/ict.html` — ICT 交功課（功課繳交 / HW Submission）、2627 2D／2H 入口、大埔三育中學連結
-  - `homework/ai-game-2d.html`, `homework/ai-game-2h.html` — AI 小遊戲作品展覽館
-  - `homework/ai-game.js` — 展覽館共用程式
-- `gallery/` — 展覽列表
-  - `gallery/ict-2627-2d/`, `gallery/ict-2627-2h/` — 2627 2D／2H 入口，連到 `homework/ai-game-2d.html` 與 `homework/ai-game-2h.html`
+  - `homework/ict.html` — ICT 交功課（功課繳交 / HW Submission）、2627 2D／2H 提交入口、大埔三育中學連結
+  - `homework/ai-game-2d.html`, `homework/ai-game-2h.html` — 登入後提交／老師管理
+  - `homework/ai-game.js` — 提交與管理
+- `gallery/` — 公眾展覽目錄
+  - `gallery/ict-2627-2d/`, `gallery/ict-2627-2h/` — 只讀作品牆
+- `js/gallery-wall.js` — 公眾牆（只讀 Supabase）
 - `resources/` — hub + ICT / DT / Science skeletons
 - `apps/` — hub + Tinkercad / Python / GeoGebra
 - `css/styles.css`, `js/i18n.js`, `js/main.js`
@@ -27,28 +28,25 @@ Then open: http://127.0.0.1:8765/
 
 Toggle 中文 | EN (top right). Choice saved in `localStorage` key `teacher-li-lang`.
 
-The AI game showcase has its own 繁體中文 | English switch, saved in `ai_game_lang`. On a first visit it follows `teacher-li-lang` when that key is already set.
+## AI mini-game exhibition
 
-## AI game showcase storage
+Public walls list submitted works from Supabase. They do not use `localStorage`, and they do not show empty seats.
 
-Submissions stay in the browser that created them:
+`homework/ai-game-2d.html` and `homework/ai-game-2h.html` are the signed-in pages. Guests are sent to `homework/portal.html?next=`. An active student can submit for classmates (year, class, student number, name, http(s) URL). The same year + class + student number updates that row. An active teacher sets the due time, late policy, edits rows, and exports CSV.
 
-- 2627 2D: `localStorage` key `ai_game_submissions_2d`
-- 2627 2H: `localStorage` key `ai_game_submissions_2h`
+Due dates stay on the class assignments marked `kind = ai_game` (one for 2D, one for 2H). Rows are in `ai_game_entries`. SQL: `supabase/migrations/20261103130128_ai_game_entries.sql`. That file is already applied on project `juxxddgkownhkxuofdjl`. Do not reset the database and do not re-apply it.
 
-This is the same limitation as the original Google Site embed. Another device or browser cannot see the list, and clearing site data deletes it. Export the Excel list from the browser that holds the submissions. The two classes do not share a key, so they do not overwrite each other.
+帳號 Student／TEACHER，密碼另發。`Student` is the same sign-in as `STUDENT`.
 
 ## Who can do what
 
-No sign-in is required to browse the home page, subject resources, app notes, or the AI mini-game exhibitions. Playing a submitted game stays public.
+No sign-in is required to browse the home page, subject resources, app notes, or the public exhibition walls. Playing a submitted game stays public. Login does not block the gallery.
 
-Sign-in is required to submit or overwrite homework, to see your own version history, and for teacher tools (accounts, deadlines, class view, soft-delete). The header control on every main page is **登入 Login**. After sign-in it shows the username and **登出**. Exhibition pages keep a **提交作品** link to `homework/portal.html?next=` the current page. That `next` value is only used as a same-site return path (for example 「先去玩小遊戲」); it is not an open redirect.
-
-Unauthenticated visitors who try to save the in-browser exhibition roster are sent to the portal login. The roster still lives in this browser after a successful sign-in. Official versioned homework is the portal.
+Sign-in is required to submit AI mini-game links, to submit versioned homework, to see your own version history, and for teacher tools. The header control is **登入 Login**. After sign-in it shows the username and **登出**. `next` on the portal is only a same-site return path. After login, `next` pointing at `homework/ai-game-*.html` returns there.
 
 ## Homework portal (phase 1)
 
-Signed-in homework lives at `homework/portal.html`. The homepage and the homework hub both link to it. The 2627 AI game showcase pages stay public for browsing and play. Their lists still stay in this browser only, and saving a card requires sign-in.
+Signed-in homework lives at `homework/portal.html`. The homepage and the homework hub both link to it. The public AI mini-game walls stay open without sign-in. Portal assignment lists skip `kind = ai_game`; those due dates are edited on the class submit pages.
 
 Sign-in asks for a username, not an email. The static client maps it to a Supabase Auth email:
 
