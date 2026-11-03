@@ -17,6 +17,8 @@ Then open: http://127.0.0.1:8765/
   - `homework/ict.html` — ICT 交功課（功課繳交 / HW Submission）、2627 2D／2H 入口、大埔三育中學連結
   - `homework/ai-game-2d.html`, `homework/ai-game-2h.html` — AI 小遊戲作品展覽館
   - `homework/ai-game.js` — 展覽館共用程式
+- `gallery/` — 展覽列表
+  - `gallery/ict-2627-2d/`, `gallery/ict-2627-2h/` — 2627 2D／2H 入口，連到 `homework/ai-game-2d.html` 與 `homework/ai-game-2h.html`
 - `resources/` — hub + ICT / DT / Science skeletons
 - `apps/` — hub + Tinkercad / Python / GeoGebra
 - `css/styles.css`, `js/i18n.js`, `js/main.js`
