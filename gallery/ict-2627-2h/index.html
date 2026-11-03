@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>2627 2H · 展覽館 · 李順華老師資源分享網頁</title>
-  <meta name="description" content="李順華老師資源分享網頁 — 2627 2H AI 小遊戲作品展覽館" />
+  <meta name="description" content="2627 2H AI 小遊戲公眾展覽。只顯示已提交的作品。" />
   <link rel="stylesheet" href="../../css/styles.css" />
 </head>
 <body data-nav="gallery">
@@ -45,6 +45,7 @@
 
 <div class="page-hero">
   <div class="page-hero-inner">
+    <p class="page-kicker" data-i18n="page.hw.ict.2h.note">AI 小遊戲</p>
     <h1 data-i18n="page.hw.ict.2h.title">2627 2H</h1>
   </div>
 </div>
@@ -53,11 +54,20 @@
   <a href="../index.html" data-i18n="sec.gallery.cn">展覽館</a> /
   <span data-i18n="page.hw.ict.2h.title">2627 2H</span>
 </nav>
-<main class="main">
+<main class="main" id="gallery-wall" data-class-code="2H">
   <div class="content-panel">
-    <p data-i18n="page.hw.ict.2h.note">AI 小遊戲作品展覽館。座號 1–40，可修改資料、篩選繳交狀況，並匯出清單。</p>
-    <p><a class="btn-enter" href="../../homework/ai-game-2h.html" data-i18n="page.hw.ict.open">進入展覽館</a></p>
-    <p><a class="btn-enter" href="../index.html" data-i18n="back.hub">返回本區目錄</a></p>
+    <div class="exhibit-toolbar">
+      <label class="sr-only" for="exhibit-search" data-i18n="gallery.searchPh">搜尋姓名或座號</label>
+      <input id="exhibit-search" type="search" data-i18n-placeholder="gallery.searchPh" placeholder="搜尋姓名或座號" />
+      <label class="sr-only" for="exhibit-sort" data-i18n="gallery.sortSeat">座號</label>
+      <select id="exhibit-sort">
+        <option value="seat" selected data-i18n="gallery.sortSeat">座號</option>
+        <option value="newest" data-i18n="gallery.sortNew">最新繳交</option>
+      </select>
+    </div>
+    <p id="exhibit-status" class="muted" data-i18n="portal.loading">載入中…</p>
+    <p id="exhibit-empty" class="exhibit-empty" hidden data-i18n="gallery.empty">尚未有作品</p>
+    <div id="exhibit-grid" class="exhibit-grid"></div>
   </div>
 </main>
 
@@ -70,5 +80,6 @@
 <script src="../../js/main.js" defer></script>
 <script src="../../js/supabase-config.js" defer></script>
 <script src="../../js/site-auth.js" defer></script>
+<script src="../../js/gallery-wall.js" defer></script>
 </body>
 </html>

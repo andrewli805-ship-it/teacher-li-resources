@@ -510,13 +510,19 @@
   }
 
   async function loadAssignments() {
-    var result = await client
-      .from("assignments")
-      .select("id, class_code, title, due_at, accept_late, late_score_factor, created_by, created_at")
-      .order("class_code")
-      .order("title");
+    var columns = "id, class_code, title, due_at, accept_late, late_score_factor, created_by, created_at, kind";
+    var result = await client.from("assignments").select(columns).order("class_code").order("title");
+    if (result.error && /kind/i.test(String(result.error.message || ""))) {
+      result = await client
+        .from("assignments")
+        .select("id, class_code, title, due_at, accept_late, late_score_factor, created_by, created_at")
+        .order("class_code")
+        .order("title");
+    }
     if (result.error) throw result.error;
-    state.assignments = result.data || [];
+    state.assignments = (result.data || []).filter(function (row) {
+      return row.kind !== "ai_game";
+    });
   }
 
   async function loadMyVersions() {
@@ -575,6 +581,21 @@
     await loadProfiles();
     renderAssignmentAdmin();
     await loadRoster();
+  }
+
+  function aiGameNext() {
+    if (!window.TeacherLiAuth) return "";
+    var params = new URLSearchParams(window.location.search);
+    var next = window.TeacherLiAuth.safeNext(params.get("next"));
+    if (!next || !/\/homework\/ai-game-[^/?#]+\.html(?:[?#].*)?$/i.test(next)) return "";
+    return next;
+  }
+
+  function returnToAiGame() {
+    var next = aiGameNext();
+    if (!next) return false;
+    window.location.replace(next);
+    return true;
   }
 
   function applyNextLinks() {
@@ -662,6 +683,7 @@
     }
     state.profile = result.data;
     setMessage($("login-error"), "");
+    if (returnToAiGame()) return;
     await enterApp();
   }
 

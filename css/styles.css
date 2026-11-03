@@ -1252,3 +1252,152 @@ body.portal-gate #portal-loading[hidden],
     margin: 1.5rem auto 2rem;
   }
 }
+
+/* —— Public exhibition wall and AI game submit —— */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.text-link {
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.exhibit-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.exhibit-toolbar input,
+.exhibit-toolbar select {
+  font: inherit;
+  color: var(--navy);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+}
+
+.exhibit-toolbar input[type="search"] {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.exhibit-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.exhibit-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-top: 3px solid var(--teal);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.85rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.exhibit-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exhibit-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.exhibit-seat {
+  margin: 0;
+  color: var(--teal-hover);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.exhibit-year {
+  margin: 0;
+  color: var(--gray-500);
+  font-size: 0.75rem;
+}
+
+.exhibit-card .btn-enter,
+.exhibit-card .exhibit-link-bad,
+.exhibit-card .btn-small {
+  align-self: stretch;
+  width: 100%;
+}
+
+.exhibit-link-bad {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-200);
+  color: var(--gray-500);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.45rem 1.1rem;
+  border-radius: 6px;
+}
+
+.exhibit-empty {
+  margin: 0.25rem 0 0;
+  color: var(--gray-500);
+}
+
+.aigame-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.85rem;
+}
+
+@media (max-width: 1099px) {
+  .exhibit-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .exhibit-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 599px) {
+  .exhibit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 399px) {
+  .exhibit-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
