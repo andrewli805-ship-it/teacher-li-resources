@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MBTI 十六型人格測驗 · 李順華老師資源分享網頁</title>
+  <meta name="description" content="李順華老師資源分享網頁 — ICT · DT · Science" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-nav="apps">
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-cn" data-i18n="brand.cn">李順華老師資源分享網頁</span>
+      <span class="brand-en" data-i18n="brand.en">Teacher Li Shun Wah Resources</span>
+    </a>
+    <div class="header-right">
+      <nav class="nav" aria-label="Main">
+        <a href="../index.html" data-nav-id="home" data-i18n="nav.home">首頁 Home</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../homework/index.html" data-nav-id="homework" data-i18n="nav.homework">交功課 Homework</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../gallery/index.html" data-nav-id="gallery" data-i18n="nav.gallery">展覽館 Exhibition</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../resources/index.html" data-nav-id="resources" data-i18n="nav.resources">資源分享 Resources</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../apps/index.html" data-nav-id="apps" data-i18n="nav.apps">有用程式 Apps</a>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-lang="zh" aria-pressed="true" data-i18n="lang.zh">中文</button>
+        <button type="button" data-lang="en" aria-pressed="false" data-i18n="lang.en">EN</button>
+      </div>
+      <div class="site-auth" data-portal="../homework/portal.html">
+        <div class="site-auth-guest">
+          <a class="btn-login" href="../homework/portal.html" data-i18n="auth.login">登入 Login</a>
+        </div>
+        <div class="site-auth-user" hidden>
+          <span class="site-auth-name"></span>
+          <button type="button" class="btn-logout" data-i18n="auth.logout">登出</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1 data-i18n="page.app.mbti">MBTI 十六型人格測驗</h1>
+    <p data-i18n="page.lead.mbti">三十二題課堂小測驗，看看自己較接近哪一種人格類型。</p>
+  </div>
+</div>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="../index.html" data-i18n="crumb.home">首頁</a> /
+  <a href="index.html" data-i18n="hub.apps.title">有用程式分享區</a> /
+  <span data-i18n="page.app.mbti">MBTI 十六型人格測驗</span>
+</nav>
+<main class="main">
+  <div class="content-panel">
+    <div class="mbti">
+      <section id="mbti-intro" class="mbti-screen">
+        <h2 data-i18n="mbti.intro.title">MBTI 十六型人格測驗</h2>
+        <p data-i18n="mbti.intro.body">這份小測驗共 32 題，大約需要 5 至 8 分鐘。每題有兩個選擇，請選比較像你平常做法的一個。</p>
+        <p class="mbti-disclaimer" data-i18n="mbti.disclaimer">這是輕鬆的課堂小測驗，用來認識自己的做事和相處風格，並不是臨床診斷。</p>
+        <div class="mbti-actions">
+          <button type="button" class="btn-enter" id="mbti-start" data-i18n="mbti.start">開始測驗</button>
+        </div>
+      </section>
+
+      <section id="mbti-quiz" class="mbti-screen" hidden>
+        <p class="mbti-progress-label" id="mbti-progress-text" aria-live="polite"></p>
+        <div
+          class="mbti-progress"
+          id="mbti-bar"
+          role="progressbar"
+          aria-valuemin="1"
+          aria-valuemax="32"
+          aria-valuenow="1"
+          aria-labelledby="mbti-progress-text"
+        >
+          <div class="mbti-progress-fill" id="mbti-bar-fill"></div>
+        </div>
+        <h2 class="mbti-stem" id="mbti-stem" tabindex="-1"></h2>
+        <div class="mbti-options" id="mbti-options" role="radiogroup" aria-labelledby="mbti-stem"></div>
+        <div class="mbti-actions">
+          <button type="button" class="btn-ghost" id="mbti-prev" data-i18n="mbti.prev">上一題</button>
+          <button type="button" class="btn-enter" id="mbti-next" disabled>下一題</button>
+        </div>
+      </section>
+
+      <section id="mbti-result" class="mbti-screen" hidden>
+        <p class="mbti-result-label" id="mbti-result-label" data-i18n="mbti.result.label">你的類型</p>
+        <p class="mbti-type-code" id="mbti-code" tabindex="-1" aria-labelledby="mbti-result-label"></p>
+        <h2 class="mbti-type-name" id="mbti-name"></h2>
+        <ul class="mbti-chips" id="mbti-chips"></ul>
+        <p class="mbti-blurb" id="mbti-blurb"></p>
+        <p class="mbti-disclaimer" data-i18n="mbti.disclaimer">這是輕鬆的課堂小測驗，用來認識自己的做事和相處風格，並不是臨床診斷。</p>
+        <div class="mbti-actions">
+          <button type="button" class="btn-enter" id="mbti-retake" data-i18n="mbti.retake">再測一次</button>
+          <a class="btn-ghost" href="index.html" data-i18n="mbti.backApps">返回程式區</a>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p><strong data-i18n="brand.cn">李順華老師資源分享網頁</strong></p>
+  <p data-i18n="footer">李順華老師資源分享網頁 · 僅供校內預覽 · 連結待補</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+<script src="../js/i18n.js" defer></script>
+<script src="../js/main.js" defer></script>
+<script src="../js/supabase-config.js" defer></script>
+<script src="../js/site-auth.js" defer></script>
+<script src="../js/mbti.js" defer></script>
+</body>
+</html>
