@@ -607,7 +607,7 @@ img {
 
 .hub-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
   margin-top: 0.5rem;
 }
@@ -663,7 +663,6 @@ img {
     writing-mode: horizontal-tb;
   }
 
-  .hub-grid,
   .hw-grid {
     grid-template-columns: 1fr;
   }
@@ -1399,5 +1398,257 @@ body.portal-gate #portal-loading[hidden],
 @media (max-width: 399px) {
   .exhibit-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* —— MBTI quiz —— */
+.card-grid.apps-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.mbti {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.mbti-disclaimer {
+  background: #fff8e8;
+  border: 1px dashed var(--amber);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.mbti-progress-label {
+  margin: 0 0 0.4rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.mbti-progress {
+  height: 10px;
+  background: var(--gray-200);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 0 1.15rem;
+}
+
+.mbti-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--teal);
+  border-radius: 999px;
+}
+
+.mbti-stem {
+  font-size: 1.25rem;
+  line-height: 1.45;
+}
+
+.mbti-stem:focus {
+  outline: none;
+}
+
+.mbti-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 0 0 1.15rem;
+}
+
+.mbti-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+  padding: 0.75rem 0.9rem;
+  border: 2px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--navy);
+  font-weight: 600;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.mbti-option input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--teal);
+  flex: none;
+}
+
+.mbti-option-key {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-100);
+  border: 2px solid var(--gray-200);
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.mbti-option-text {
+  flex: 1;
+}
+
+.mbti-option:hover {
+  border-color: var(--teal);
+  background: rgba(13, 148, 136, 0.06);
+}
+
+.mbti-option.is-selected,
+.mbti-option:has(input:checked) {
+  border-color: var(--teal);
+  background: rgba(13, 148, 136, 0.12);
+  box-shadow: inset 4px 0 0 var(--teal);
+}
+
+.mbti-option.is-selected .mbti-option-key,
+.mbti-option:has(input:checked) .mbti-option-key {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: var(--white);
+}
+
+.mbti-option:focus-within:has(input:focus-visible) {
+  outline: 3px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.mbti-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.mbti .btn-enter,
+.mbti .btn-ghost {
+  min-height: 44px;
+  padding: 0.45rem 1.15rem;
+}
+
+.mbti .btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+}
+
+.mbti .btn-enter:disabled,
+.mbti .btn-ghost:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mbti .btn-enter:disabled:hover {
+  background: var(--teal);
+}
+
+.mbti .btn-ghost:disabled:hover {
+  border-color: var(--gray-200);
+  color: var(--navy);
+}
+
+.mbti-result-label {
+  margin: 0;
+  font-weight: 800;
+  color: var(--gray-500);
+  letter-spacing: 0.04em;
+}
+
+.mbti-type-code {
+  margin: 0.15rem 0 0.15rem;
+  font-size: clamp(2.5rem, 8vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+  color: var(--navy);
+}
+
+.mbti-type-code:focus {
+  outline: none;
+}
+
+.mbti-type-name {
+  margin: 0 0 0.9rem;
+  font-size: 1.45rem;
+}
+
+.mbti-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.mbti-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.25rem 0.85rem 0.25rem 0.3rem;
+  border-radius: 999px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.mbti-chip-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--white);
+  font-weight: 800;
+}
+
+.mbti-chip[data-pole="E"] .mbti-chip-letter,
+.mbti-chip[data-pole="S"] .mbti-chip-letter,
+.mbti-chip[data-pole="T"] .mbti-chip-letter,
+.mbti-chip[data-pole="J"] .mbti-chip-letter {
+  background: var(--teal);
+}
+
+.mbti-chip[data-pole="I"] .mbti-chip-letter,
+.mbti-chip[data-pole="N"] .mbti-chip-letter,
+.mbti-chip[data-pole="F"] .mbti-chip-letter,
+.mbti-chip[data-pole="P"] .mbti-chip-letter {
+  background: var(--amber);
+  color: var(--navy);
+}
+
+.mbti-blurb {
+  line-height: 1.7;
+}
+
+@media (max-width: 860px) {
+  .mbti-actions {
+    flex-direction: column;
+  }
+
+  .mbti-actions .btn-enter,
+  .mbti-actions .btn-ghost {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mbti-progress-fill {
+    transition: none;
   }
 }
