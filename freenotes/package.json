@@ -1,0 +1,27 @@
+{
+  "name": "freenotes",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "icons": "python3 scripts/generate_icons.py"
+  },
+  "devDependencies": {
+    "typescript": "~7.0.2",
+    "vite": "^8.3.6",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "idb": "^8.0.4",
+    "jspdf": "^4.2.1",
+    "mammoth": "^1.13.0",
+    "pdfjs-dist": "^6.5.438",
+    "xlsx": "^0.18.5"
+  }
+}
