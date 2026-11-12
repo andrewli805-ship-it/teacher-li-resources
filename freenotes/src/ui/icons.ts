@@ -15,6 +15,7 @@ export const icons = {
   pages: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="5" width="11" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M6 7c-1 .4-1.5 1-1.5 2.2v9.3A1.5 1.5 0 0 0 6 20h8"/></svg>`,
   close: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="m7 7 10 10M17 7 7 17"/></svg>`,
   check: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="m5.5 12 4.5 4.5 8.5-9"/></svg>`,
+  homePlus: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.8 12 4.5l7.5 6.3"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M6.2 10.2V19.5h11.6V10.2"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 12.2v5.2M9.4 14.8h5.2"/></svg>`,
 };
 
 export function icon(name: keyof typeof icons, className = "icon"): string {

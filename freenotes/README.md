@@ -31,9 +31,13 @@ npm test
 
 ## 加到 iPhone / iPad 主畫面
 
+書庫 tagline 下方的按鈕不會在 iPhone 或 iPad 上直接安裝，只開啟圖解。必須從主畫面圖示打開，才會全螢幕。
+
 1. 用 **Safari** 開啟網站（開發時用電腦的區網位址，或之後自行部署的網址）。
-2. 點分享按鈕，選擇「加到主畫面」。
+2. iPhone：底部列沒有獨立分享圖示。點右下角「⋯」，再選「分享」或「加到主畫面」。iPad：點頂部工具列的分享按鈕。
 3. 名稱確認為 Freenotes 後加入。
+
+Android 若已收到瀏覽器的安裝事件，同一個按鈕會叫出系統提示，不會自動跳出。已用主畫面圖示開啟時，按鈕與說明會隱藏。
 
 加到主畫面後，應用程式會以全螢幕（獨立視窗）開啟，並避開瀏海與主畫面指示器的安全區域。第一次成功載入後，應用程式外殼與已儲存的筆記可離線使用。
 
@@ -65,4 +69,4 @@ npm test
 
 `npm run build` 輸出到 `../apps/freenotes/`。Vite `base`、manifest `start_url` 與 service worker `scope` 都是 `/teacher-li-resources/apps/freenotes/`，所以不會攔截功課或展覽館頁面。公開網址要帶結尾斜線：`https://andrewli805-ship-it.github.io/teacher-li-resources/apps/freenotes/`。
 
-書庫有「返回程式區」（連到 `apps/index.html`）和「加到主畫面」。編輯頁只保留「返回書庫」。
+書庫有「返回程式區」（連到 `apps/index.html`）和加到主畫面的說明按鈕。編輯頁沒有這個按鈕，只保留「返回書庫」。
