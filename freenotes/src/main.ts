@@ -2,7 +2,9 @@ import { registerSW } from "virtual:pwa-register";
 import { openNotesDb } from "./db";
 import "./styles.css";
 import { mountApp } from "./ui/app";
+import { bindA2hsInstallEvents } from "./ui/a2hs";
 
+bindA2hsInstallEvents();
 registerSW({ immediate: true });
 
 async function boot(): Promise<void> {

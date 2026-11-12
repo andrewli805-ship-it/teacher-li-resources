@@ -16,6 +16,7 @@ import {
   type Notebook,
   type PaperTemplate,
 } from "../types";
+import { a2hsControlHtml, mountLibraryA2hs } from "./a2hs";
 import { el } from "./dom";
 import { icon } from "./icons";
 import {
@@ -41,10 +42,10 @@ export async function renderLibrary(
     <header class="lib-header">
       <div class="brand">
         <img class="brand-mark" src="${import.meta.env.BASE_URL}icons/icon-192.png" alt="" width="36" height="36" />
-        <div>
+        <div class="brand-copy">
           <h1>Freenotes</h1>
           <p class="tagline">手寫筆記，也可標註文件</p>
-          <button type="button" class="a2hs-link" data-act="a2hs">加到主畫面</button>
+          ${a2hsControlHtml()}
         </div>
       </div>
       <div class="lib-actions">
@@ -64,9 +65,7 @@ export async function renderLibrary(
   `;
 
   const fileInput = root.querySelector("input[type=file]") as HTMLInputElement;
-  const addToHome = root.querySelector<HTMLButtonElement>('[data-act="a2hs"]');
-  if (addToHome && isStandaloneApp()) addToHome.hidden = true;
-  addToHome?.addEventListener("click", () => openAddToHomeScreen());
+  mountLibraryA2hs(root);
   root.querySelector('[data-act="new"]')?.addEventListener("click", () => {
     void createNotebookFlow(db, root, openNotebook);
   });
@@ -94,48 +93,6 @@ export async function renderLibrary(
       if (notebook) void notebookMenu(db, notebook, root, openNotebook);
     });
   });
-}
-
-function isStandaloneApp(): boolean {
-  const nav = navigator as Navigator & { standalone?: boolean };
-  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
-}
-
-function openAddToHomeScreen(): void {
-  const overlay = document.createElement("div");
-  overlay.className = "overlay";
-  overlay.innerHTML = `
-    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="a2hs-title">
-      <h2 id="a2hs-title">加到主畫面</h2>
-      <div class="a2hs-copy">
-        <p>用 iPhone 或 iPad 的 Safari 開啟本頁：</p>
-        <ol>
-          <li>點分享按鈕</li>
-          <li>選擇「加到主畫面」</li>
-          <li>名稱確認為 Freenotes 後加入</li>
-        </ol>
-        <p>加入後會以全螢幕開啟，並避開瀏海與主畫面指示器。第一次成功載入後，應用程式外殼與已儲存的筆記可離線使用。</p>
-        <p>繪圖與匯入需要 HTTPS（本站已提供）。電腦瀏覽器可以用來測試，但加到主畫面請用 Safari。</p>
-      </div>
-      <div class="dialog-actions">
-        <button type="button" class="btn primary" data-act="close">知道了</button>
-      </div>
-    </div>`;
-  const close = () => {
-    document.removeEventListener("keydown", onKey);
-    overlay.remove();
-  };
-  const onKey = (event: KeyboardEvent) => {
-    if (event.key === "Escape") close();
-  };
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) close();
-  });
-  overlay.querySelector('[data-act="close"]')?.addEventListener("click", close);
-  document.addEventListener("keydown", onKey);
-  document.body.append(overlay);
-  const closeBtn = overlay.querySelector<HTMLButtonElement>('[data-act="close"]');
-  requestAnimationFrame(() => closeBtn?.focus());
 }
 
 function emptyState(): string {
