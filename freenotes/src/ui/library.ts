@@ -16,6 +16,7 @@ import {
   type Notebook,
   type PaperTemplate,
 } from "../types";
+import { IMPORT_ACCEPT } from "../import/kind";
 import { a2hsControlHtml, mountLibraryA2hs } from "./a2hs";
 import { el } from "./dom";
 import { icon } from "./icons";
@@ -49,7 +50,7 @@ export async function renderLibrary(
         </div>
       </div>
       <div class="lib-actions">
-        <button type="button" class="btn ghost" data-act="import">${icon("import")}匯入檔案</button>
+        ${importPickerHtml()}
         <button type="button" class="btn primary" data-act="new">${icon("plus")}新建筆記本</button>
       </div>
     </header>
@@ -61,24 +62,21 @@ export async function renderLibrary(
       }
       <p class="lib-storage-note">筆記只存在這部裝置的瀏覽器，清除網站資料會一併刪除。</p>
     </main>
-    <input type="file" class="sr-only" accept=".pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/msword" />
   `;
 
-  const fileInput = root.querySelector("input[type=file]") as HTMLInputElement;
   mountLibraryA2hs(root);
   root.querySelector('[data-act="new"]')?.addEventListener("click", () => {
     void createNotebookFlow(db, root, openNotebook);
   });
-  root.querySelector('[data-act="import"]')?.addEventListener("click", () => fileInput.click());
-  root.querySelector("[data-empty-import]")?.addEventListener("click", () => fileInput.click());
   root.querySelector("[data-empty-new]")?.addEventListener("click", () => {
     void createNotebookFlow(db, root, openNotebook);
   });
-
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    fileInput.value = "";
-    if (file) void importFlow(db, file, root, openNotebook);
+  root.querySelectorAll<HTMLInputElement>("input.file-import-input").forEach((input) => {
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      input.value = "";
+      if (file) void importFlow(db, file, root, openNotebook);
+    });
   });
 
   root.querySelectorAll<HTMLElement>("[data-open]").forEach((card) => {
@@ -95,6 +93,11 @@ export async function renderLibrary(
   });
 }
 
+/** The file input covers the control so the tap hits it directly. iPad Safari will not open a picker from a scripted click on a clipped 1px input. */
+export function importPickerHtml(): string {
+  return `<label class="btn ghost file-import"><input class="file-import-input" type="file" accept="${IMPORT_ACCEPT}" aria-label="匯入檔案" />${icon("import")}匯入檔案</label>`;
+}
+
 function emptyState(): string {
   return `
     <section class="empty-lib">
@@ -106,7 +109,7 @@ function emptyState(): string {
       <p>用手寫筆或手指在筆記本上書寫，也可以匯入 PDF、Word 或 Excel 再於文件上標註。</p>
       <div class="empty-actions">
         <button type="button" class="btn primary" data-empty-new>${icon("plus")}新建筆記本</button>
-        <button type="button" class="btn ghost" data-empty-import>${icon("import")}匯入檔案</button>
+        ${importPickerHtml()}
       </div>
     </section>`;
 }
