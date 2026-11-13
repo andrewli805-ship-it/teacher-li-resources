@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>校園傾偈練習 · 李順華老師資源分享網頁</title>
+  <meta name="description" content="李順華老師資源分享網頁 — ICT · DT · Science" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body data-nav="apps">
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-cn" data-i18n="brand.cn">李順華老師資源分享網頁</span>
+      <span class="brand-en" data-i18n="brand.en">Teacher Li Shun Wah Resources</span>
+    </a>
+    <div class="header-right">
+      <nav class="nav" aria-label="Main">
+        <a href="../index.html" data-nav-id="home" data-i18n="nav.home">首頁 Home</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../homework/index.html" data-nav-id="homework" data-i18n="nav.homework">交功課 Homework</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../gallery/index.html" data-nav-id="gallery" data-i18n="nav.gallery">展覽館 Exhibition</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../resources/index.html" data-nav-id="resources" data-i18n="nav.resources">資源分享 Resources</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../apps/index.html" data-nav-id="apps" data-i18n="nav.apps">有用程式 Apps</a>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-lang="zh" aria-pressed="true" data-i18n="lang.zh">中文</button>
+        <button type="button" data-lang="en" aria-pressed="false" data-i18n="lang.en">EN</button>
+      </div>
+      <div class="site-auth" data-portal="../homework/portal.html">
+        <div class="site-auth-guest">
+          <a class="btn-login" href="../homework/portal.html" data-i18n="auth.login">登入 Login</a>
+        </div>
+        <div class="site-auth-user" hidden>
+          <span class="site-auth-name"></span>
+          <button type="button" class="btn-logout" data-i18n="auth.logout">登出</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1 data-i18n="page.app.campusChat">校園傾偈練習</h1>
+    <p data-i18n="page.lead.campusChat">同虛擬同學練習傾偈、識朋友。呢度只係練習，唔會收集你嘅私人資料。</p>
+  </div>
+</div>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="../index.html" data-i18n="crumb.home">首頁</a> /
+  <a href="index.html" data-i18n="hub.apps.title">有用程式分享區</a> /
+  <span data-i18n="page.app.campusChat">校園傾偈練習</span>
+</nav>
+<main class="main">
+  <div class="content-panel">
+    <div id="cc-root" class="cc-app" lang="zh-Hant"></div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p><strong data-i18n="brand.cn">李順華老師資源分享網頁</strong></p>
+  <p data-i18n="footer">李順華老師資源分享網頁 · 僅供校內預覽 · 連結待補</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+<script src="../js/i18n.js" defer></script>
+<script src="../js/main.js" defer></script>
+<script src="../js/supabase-config.js" defer></script>
+<script src="../js/site-auth.js" defer></script>
+<script src="../js/campus-chat-data.js" defer></script>
+<script src="../js/campus-chat.js" defer></script>
+</body>
+</html>
