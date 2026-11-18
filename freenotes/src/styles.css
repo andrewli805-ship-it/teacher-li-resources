@@ -885,6 +885,9 @@ h1, h2, p { margin: 0; }
   cursor: pointer;
 }
 .width-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 32px;
   padding: 0 10px;
   border-radius: 999px;
@@ -894,6 +897,13 @@ h1, h2, p { margin: 0; }
   font-size: 0.78rem;
   white-space: nowrap;
   flex-shrink: 0;
+}
+.editor-top .width-chip {
+  min-height: 44px;
+}
+.palette-pop .width-chip {
+  min-width: 44px;
+  min-height: 44px;
 }
 .width-chip.active {
   background: var(--accent);
@@ -1000,6 +1010,11 @@ h1, h2, p { margin: 0; }
     #d9cbb8;
 }
 .editor-app.tool-eraser .viewport { cursor: cell; }
+.editor-app.tool-eraser .editor-top .colors,
+.editor-app.tool-eraser .editor-top .custom-color,
+.editor-app.tool-eraser .palette-pop .swatch {
+  display: none;
+}
 .stage {
   position: absolute;
   top: 0;
@@ -1103,14 +1118,29 @@ h1, h2, p { margin: 0; }
   padding: 4px 2px;
 }
 .dock-btn .icon { width: 22px; height: 22px; }
+.dock-glyph {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+}
 .dock-color {
   width: 18px;
   height: 18px;
   border-radius: 50%;
   background: #1c1917;
   box-shadow: 0 0 0 1px rgba(0,0,0,0.15);
-  margin: 2px 0;
 }
+.dock-size {
+  color: var(--ink);
+  display: block;
+  line-height: 0;
+}
+.dock-size[hidden] { display: none !important; }
+.dock-size svg { display: none; }
+.dock-size[data-size="6"] svg[data-size="6"] { display: block; width: 8px; height: 8px; }
+.dock-size[data-size="10"] svg[data-size="10"] { display: block; width: 12px; height: 12px; }
+.dock-size[data-size="18"] svg[data-size="18"] { display: block; width: 18px; height: 18px; }
 .palette-pop {
   position: fixed;
   left: 8px;
