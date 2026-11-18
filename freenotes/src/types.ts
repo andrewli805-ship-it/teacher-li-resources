@@ -81,3 +81,15 @@ export const A4_HEIGHT = 1123;
 
 export const PEN_WIDTHS = [1.6, 2.8, 4.8] as const;
 export const HIGHLIGHTER_WIDTHS = [10, 16, 24] as const;
+
+/** Page-coordinate hit radius (`extra`) for the whole-stroke eraser. */
+export const ERASER_RADII = [6, 10, 18] as const;
+export type EraserRadius = (typeof ERASER_RADII)[number];
+
+const ERASER_RADIUS_VALUES = new Set<string>(["6", "10", "18"]);
+
+/** Accept only `"6"`, `"10"`, and `"18"`. Anything else is the mid radius, 10. */
+export function eraserRadiusFromStorage(raw: string | null | undefined): EraserRadius {
+  if (raw != null && ERASER_RADIUS_VALUES.has(raw)) return Number(raw) as EraserRadius;
+  return 10;
+}
