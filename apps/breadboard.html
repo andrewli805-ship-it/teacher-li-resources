@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>麵包板接線規劃 · 李順華老師資源分享網頁</title>
+  <meta name="description" content="本站自製工具，用來計劃 Arduino 麵包板接線。只作規劃，不會通電或模擬電路。" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="bb-page" data-nav="apps">
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-cn" data-i18n="brand.cn">李順華老師資源分享網頁</span>
+      <span class="brand-en" data-i18n="brand.en">Teacher Li Shun Wah Resources</span>
+    </a>
+    <div class="header-right">
+      <nav class="nav" aria-label="Main">
+        <a href="../index.html" data-nav-id="home" data-i18n="nav.home">首頁 Home</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../homework/index.html" data-nav-id="homework" data-i18n="nav.homework">交功課 Homework</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../gallery/index.html" data-nav-id="gallery" data-i18n="nav.gallery">展覽館 Exhibition</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../resources/index.html" data-nav-id="resources" data-i18n="nav.resources">資源分享 Resources</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../apps/index.html" data-nav-id="apps" data-i18n="nav.apps">有用程式 Apps</a>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-lang="zh" aria-pressed="true" data-i18n="lang.zh">中文</button>
+        <button type="button" data-lang="en" aria-pressed="false" data-i18n="lang.en">EN</button>
+      </div>
+      <div class="site-auth" data-portal="../homework/portal.html">
+        <div class="site-auth-guest">
+          <a class="btn-login" href="../homework/portal.html" data-i18n="auth.login">登入 Login</a>
+        </div>
+        <div class="site-auth-user" hidden>
+          <span class="site-auth-name"></span>
+          <button type="button" class="btn-logout" data-i18n="auth.logout">登出</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1 data-i18n="page.app.breadboard">麵包板接線規劃</h1>
+    <p data-i18n="page.lead.breadboard">本站自製工具，用來計劃 Arduino 麵包板接線。只作規劃，不會通電或模擬電路。</p>
+  </div>
+</div>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="../index.html" data-i18n="crumb.home">首頁</a> /
+  <a href="index.html" data-i18n="hub.apps.title">有用程式分享區</a> /
+  <span data-i18n="page.app.breadboard">麵包板接線規劃</span>
+</nav>
+<main class="main">
+  <div class="bb-workspace" id="bb-app">
+    <div class="bb-toolbar" role="toolbar" aria-label="Breadboard">
+      <div class="bb-board-switch" role="group" id="bb-board-switch">
+        <button type="button" class="bb-btn" id="bb-board-uno" data-bb-action="board-uno" aria-pressed="true" data-i18n="bb.board.uno">Arduino Uno</button>
+        <button type="button" class="bb-btn" id="bb-board-leo" data-bb-action="board-leo" aria-pressed="false" data-i18n="bb.board.leonardo">Arduino Leonardo</button>
+      </div>
+      <button type="button" class="bb-btn bb-name" id="bb-name" data-i18n-label="bb.project.nameLabel"></button>
+      <input type="text" class="bb-name-input" id="bb-name-input" maxlength="60" hidden />
+      <button type="button" class="bb-btn bb-only-wide" id="bb-select" data-bb-action="select" data-i18n="bb.toolbar.select">選取</button>
+      <button type="button" class="bb-btn" id="bb-wire" data-bb-action="wire" data-i18n="bb.toolbar.wire" aria-pressed="false">接線</button>
+      <button type="button" class="bb-btn bb-wire-cancel" id="bb-wire-cancel" data-bb-action="wire-cancel" data-i18n="bb.toolbar.wireCancel" hidden>取消接線</button>
+      <span class="bb-toolbar-sep bb-only-wide" aria-hidden="true"></span>
+      <button type="button" class="bb-btn bb-only-wide" data-bb-action="new" data-i18n="bb.toolbar.new">新增</button>
+      <button type="button" class="bb-btn bb-only-wide" data-bb-action="open" data-i18n="bb.toolbar.open">開啟</button>
+      <button type="button" class="bb-btn bb-only-wide" data-bb-action="save" data-i18n="bb.toolbar.save">儲存</button>
+      <button type="button" class="bb-btn bb-only-wide" id="bb-download" data-bb-action="download" data-i18n="bb.toolbar.download">下載專案檔</button>
+      <button type="button" class="bb-btn bb-btn-primary" data-bb-action="export" data-i18n="bb.toolbar.export">匯出圖片</button>
+      <span class="bb-toolbar-sep bb-only-wide" aria-hidden="true"></span>
+      <button type="button" class="bb-btn bb-only-wide" id="bb-undo" data-bb-action="undo" data-i18n="bb.toolbar.undo">復原</button>
+      <button type="button" class="bb-btn bb-only-wide" id="bb-redo" data-bb-action="redo" data-i18n="bb.toolbar.redo">重做</button>
+      <span class="bb-toolbar-spacer bb-only-wide" aria-hidden="true"></span>
+      <button type="button" class="bb-btn bb-only-wide" data-bb-action="help" data-i18n="bb.toolbar.help">用法</button>
+      <div class="bb-menu-wrap bb-only-phone">
+        <button type="button" class="bb-btn" id="bb-menu-btn" data-bb-action="menu" aria-expanded="false" aria-controls="bb-menu" data-i18n="bb.toolbar.menu">選單</button>
+        <div class="bb-menu" id="bb-menu" role="menu" hidden>
+          <button type="button" class="bb-btn" role="menuitem" data-bb-action="new" data-i18n="bb.toolbar.new">新增</button>
+          <button type="button" class="bb-btn" role="menuitem" data-bb-action="open" data-i18n="bb.toolbar.open">開啟</button>
+          <button type="button" class="bb-btn" role="menuitem" data-bb-action="save" data-i18n="bb.toolbar.save">儲存</button>
+          <button type="button" class="bb-btn" role="menuitem" data-bb-action="download" data-i18n="bb.toolbar.download">下載專案檔</button>
+          <button type="button" class="bb-btn" role="menuitem" data-bb-action="select" data-i18n="bb.toolbar.select">選取</button>
+          <button type="button" class="bb-btn" role="menuitem" id="bb-undo-m" data-bb-action="undo" data-i18n="bb.toolbar.undo">復原</button>
+          <button type="button" class="bb-btn" role="menuitem" id="bb-redo-m" data-bb-action="redo" data-i18n="bb.toolbar.redo">重做</button>
+          <button type="button" class="bb-btn" role="menuitem" data-bb-action="help" data-i18n="bb.toolbar.help">用法</button>
+        </div>
+      </div>
+    </div>
+    <div class="bb-status" id="bb-status">
+      <p class="bb-i2c" id="bb-i2c"></p>
+      <div class="bb-switch" id="bb-switch" hidden>
+        <p id="bb-switch-text"></p>
+        <button type="button" class="bb-btn" id="bb-switch-close" data-i18n="bb.common.close">關閉</button>
+      </div>
+      <p class="bb-note" id="bb-note" aria-live="polite"></p>
+      <div id="bb-alerts-danger" aria-live="assertive"></div>
+      <div id="bb-alerts-hint" aria-live="polite"></div>
+    </div>
+    <div class="bb-save-banner" id="bb-save-banner" hidden>
+      <p class="bb-disclaimer" data-i18n="bb.intro.privacy">專案只保存在這個瀏覽器。換一部電腦或平板，或清除瀏覽器資料，就會消失。若要帶走，請用「下載專案檔」。</p>
+      <p data-i18n="bb.status.saved">已保存在這個瀏覽器。</p>
+      <button type="button" class="bb-btn" id="bb-save-dismiss" data-i18n="bb.common.close">關閉</button>
+    </div>
+    <div class="bb-draft" id="bb-draft" hidden>
+      <p data-i18n="bb.draft.banner">發現未儲存的草稿。</p>
+      <button type="button" class="bb-btn bb-btn-primary" id="bb-draft-restore" data-i18n="bb.draft.restore">還原草稿</button>
+      <button type="button" class="bb-btn" id="bb-draft-discard" data-i18n="bb.draft.discard">丟棄草稿</button>
+    </div>
+    <div class="bb-body">
+      <aside class="bb-parts-wrap" aria-labelledby="bb-parts-title">
+        <h2 id="bb-parts-title" data-i18n="bb.parts.title">元件</h2>
+        <div class="bb-parts" id="bb-parts"></div>
+      </aside>
+      <div class="bb-stage" id="bb-stage">
+        <svg id="bb-svg" class="bb-svg" role="group" tabindex="0" aria-label="接線規劃畫布">
+          <g id="bb-scene"></g>
+        </svg>
+        <div class="bb-zoom" role="group">
+          <button type="button" class="bb-btn" id="bb-zoom-in" data-bb-action="zoom-in">+</button>
+          <button type="button" class="bb-btn" id="bb-zoom-out" data-bb-action="zoom-out">−</button>
+          <button type="button" class="bb-btn" id="bb-zoom-fit" data-bb-action="fit">⤢</button>
+        </div>
+        <div class="bb-sheet" id="bb-sheet" hidden>
+          <button type="button" class="bb-sheet-handle" id="bb-sheet-handle" aria-label="Close"></button>
+          <div class="bb-sheet-body" id="bb-sheet-body"></div>
+        </div>
+        <div class="bb-actionbar" id="bb-actionbar" hidden>
+          <button type="button" class="bb-btn" id="bb-act-connect" data-bb-action="connect" data-i18n="bb.insp.connect">連到引腳</button>
+          <button type="button" class="bb-btn" id="bb-act-rotate" data-bb-action="rotate" data-i18n="bb.insp.rotate">旋轉</button>
+          <button type="button" class="bb-btn bb-btn-danger" id="bb-act-delete" data-bb-action="delete" data-i18n="bb.insp.delete">刪除</button>
+          <button type="button" class="bb-btn" id="bb-act-done" data-bb-action="done" data-i18n="bb.action.done">完成</button>
+        </div>
+      </div>
+      <aside class="bb-inspector" id="bb-inspector" aria-live="polite"></aside>
+    </div>
+    <p class="bb-sr" id="bb-sr" aria-live="polite"></p>
+  </div>
+</main>
+
+<div class="bb-modal" id="bb-intro" role="dialog" aria-modal="true" aria-labelledby="bb-intro-title" hidden>
+  <div class="bb-modal-card">
+    <h2 id="bb-intro-title" data-i18n="bb.intro.title">開始使用麵包板接線規劃</h2>
+    <p data-i18n="bb.intro.what">這是本站自製的接線規劃工具，給中學 DT／Arduino 課堂使用。你可以在虛擬麵包板上放置元件、拉線到 Arduino 引腳，再匯出圖片。</p>
+    <p data-i18n="bb.intro.not">這不是電路模擬，不會通電，也不是 Tinkercad。</p>
+    <p data-i18n="bb.intro.stepsLabel">用法</p>
+    <ol>
+      <li data-i18n="bb.intro.step1">選一塊板（預設 Uno），再從元件列把零件放到麵包板或模組區。</li>
+      <li data-i18n="bb.intro.step2">用「接線」把孔位或模組腳連到 Arduino 引腳；在觸控裝置上，也可先選元件，再按「連到引腳」。</li>
+      <li data-i18n="bb.intro.step3">用「匯出圖片」保存或交功課。專案也可存在這個瀏覽器，或下載專案檔。</li>
+    </ol>
+    <p data-i18n="bb.help.leonardoAnalog">Leonardo 部分數位腳也可用作類比輸入，第一版暫不另外標出。</p>
+    <p class="bb-disclaimer" data-i18n="bb.intro.privacy">專案只保存在這個瀏覽器。換一部電腦或平板，或清除瀏覽器資料，就會消失。若要帶走，請用「下載專案檔」。</p>
+    <div class="bb-modal-actions">
+      <button type="button" class="bb-btn bb-btn-primary" id="bb-intro-start" data-i18n="bb.intro.start">開始規劃</button>
+      <button type="button" class="bb-btn" id="bb-intro-open" data-i18n="bb.intro.openExisting" hidden>查看已保存的專案</button>
+    </div>
+  </div>
+</div>
+<div id="bb-modals"></div>
+
+<footer class="site-footer">
+  <p><strong data-i18n="brand.cn">李順華老師資源分享網頁</strong></p>
+  <p data-i18n="footer">李順華老師資源分享網頁 · 僅供校內預覽 · 連結待補</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+<script src="../js/i18n.js" defer></script>
+<script src="../js/main.js" defer></script>
+<script src="../js/supabase-config.js" defer></script>
+<script src="../js/site-auth.js" defer></script>
+<script src="../js/breadboard-data.js" defer></script>
+<script src="../js/breadboard.js" defer></script>
+</body>
+</html>
