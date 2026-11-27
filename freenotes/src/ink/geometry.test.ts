@@ -49,6 +49,43 @@ describe("strokeHitsPath", () => {
   });
 });
 
+describe("eraser extra radii 6 / 10 / 18", () => {
+  // Pen width 2 → strokeRadius = max(1.4, 2) = 2. Threshold is 2 + extra.
+  const s = stroke(
+    [
+      { x: 0, y: 0 },
+      { x: 80, y: 0 },
+    ],
+    2,
+  );
+
+  it("extra 6 hits inside the radius and misses just outside", () => {
+    expect(strokeHitsPoint(s, 40, 7.9, 6)).toBe(true);
+    expect(strokeHitsPoint(s, 40, 8.2, 6)).toBe(false);
+  });
+
+  it("extra 10 reaches farther than 6 and stops short of 18", () => {
+    expect(strokeHitsPoint(s, 40, 11, 6)).toBe(false);
+    expect(strokeHitsPoint(s, 40, 11, 10)).toBe(true);
+    expect(strokeHitsPoint(s, 40, 13, 10)).toBe(false);
+  });
+
+  it("extra 18 hits a more distant stroke and misses beyond it", () => {
+    expect(strokeHitsPoint(s, 40, 19, 10)).toBe(false);
+    expect(strokeHitsPoint(s, 40, 19, 18)).toBe(true);
+    expect(strokeHitsPoint(s, 40, 21, 18)).toBe(false);
+  });
+
+  it("a near-miss path hits only with the larger extra", () => {
+    const path = [
+      { x: 40, y: 19, p: 0.5, t: 0 },
+      { x: 48, y: 19, p: 0.5, t: 1 },
+    ];
+    expect(strokeHitsPath(s, path, 10)).toBe(false);
+    expect(strokeHitsPath(s, path, 18)).toBe(true);
+  });
+});
+
 describe("simplifyPoints", () => {
   it("keeps endpoints and drops tight midpoints", () => {
     const pts = [
