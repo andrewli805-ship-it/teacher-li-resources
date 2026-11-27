@@ -786,6 +786,20 @@
 
   function cylinderNets(model) {
     var r = model.r, h = model.h, w = model.w;
+    // 2πr is always longer than 4r, so both bases fit on one circumference edge
+    // with a gap and still do not overlap.
+    var spare = w - 4 * r;
+    var gap = Math.max(0.4, Math.min(r * 0.45, spare * 0.28));
+    var sep = 2 * r + gap;
+    function onRim(no, edgeY, outward, cx) {
+      return {
+        no: no,
+        cx: cx,
+        cy: edgeY + outward * r,
+        edgeY: edgeY,
+        outward: outward,
+      };
+    }
     function base(side) {
       var rect = [
         { x: -w / 2, y: -h / 2 },
@@ -793,22 +807,13 @@
         { x: w / 2, y: h / 2 },
         { x: -w / 2, y: h / 2 },
       ];
-      var circles;
-      if (side === "A") {
-        circles = [
-          { no: 2, cx: -r, cy: h / 2 + TAB_CM + r },
-          { no: 3, cx: r, cy: h / 2 + TAB_CM + r },
-        ];
-      } else {
-        circles = [
-          { no: 2, cx: 0, cy: h / 2 + TAB_CM + r },
-          { no: 3, cx: 0, cy: -(h / 2 + TAB_CM + r) },
-        ];
-      }
+      var circles = side === "A"
+        ? [onRim(2, h / 2, 1, -sep / 2), onRim(3, h / 2, 1, sep / 2)]
+        : [onRim(2, h / 2, 1, 0), onRim(3, -h / 2, -1, 0)];
       return { rect: rect, circles: circles, side: side };
     }
     return [base("A"), base("B")].map(function (spec) {
-        return {
+      return {
         id: "cyl-" + spec.side,
         treeKey: "cyl-" + spec.side,
         rawKey: "cyl-" + spec.side,
@@ -827,25 +832,33 @@
       var spec = net.round;
       var fill1 = faceColor(1);
       figures.push({ no: 1, kind: "poly", pts: spec.rect.map(function (p) { return { x: p.x, y: p.y }; }), fill: fill1, ink: labelInk(fill1) });
+      var lift = withTabs ? TAB_CM : 0;
       spec.circles.forEach(function (c) {
         var fill = faceColor(c.no);
-        figures.push({ no: c.no, kind: "circle", cx: c.cx, cy: c.cy, r: model.r, fill: fill, ink: labelInk(fill) });
+        figures.push({
+          no: c.no, kind: "circle",
+          cx: c.cx, cy: c.cy + c.outward * lift, r: model.r,
+          fill: fill, ink: labelInk(fill),
+        });
       });
       var rect = spec.rect;
-      folds.push([rect[0], rect[3]]);
-      folds.push([rect[1], rect[2]]);
+      // Short edges are the seam (a cut that is glued), not a fold.
+      // Long edges are the circular rims; the bases glue to them.
       cuts.push([rect[0], rect[1]], [rect[2], rect[3]], [rect[3], rect[0]], [rect[1], rect[2]]);
       if (withTabs) {
         tabs.push(tabTrapezoid(rect[1], rect[2], TAB_CM));
         spec.circles.forEach(function (c) {
-          var toward = c.cy > 0 ? 1 : -1;
-          var edgeY = toward > 0 ? model.h / 2 : -model.h / 2;
-          var half = Math.min(model.r * 0.9, model.w * 0.2);
-          var y0 = edgeY;
-          var p = { x: c.cx - half, y: y0 };
-          var q = { x: c.cx + half, y: y0 };
-          if (toward < 0) tabs.push(tabTrapezoid(q, p, TAB_CM));
-          else tabs.push(tabTrapezoid(p, q, TAB_CM));
+          var room = model.w / 2 - Math.abs(c.cx) - 0.15;
+          var half = Math.min(model.r * 0.85, Math.max(0.6, room));
+          var y0 = c.edgeY;
+          var y1 = c.edgeY + c.outward * TAB_CM;
+          var inset = Math.min(0.18, half * 0.22);
+          tabs.push([
+            { x: c.cx - half, y: y0 },
+            { x: c.cx + half, y: y0 },
+            { x: c.cx + half - inset, y: y1 },
+            { x: c.cx - half + inset, y: y1 },
+          ]);
         });
       }
       return { figures: figures, folds: folds, cuts: cuts, tabs: tabs };
@@ -922,8 +935,12 @@
       for (i = 0; i < segs; i++) {
         var u0 = -w / 2 + (w * i) / segs;
         var u1 = -w / 2 + (w * (i + 1)) / segs;
+        var edges = [0, 2];
+        if (i === 0) edges.push(3);
+        if (i === segs - 1) edges.push(1);
         polys.push({
-          no: 1, fill: fill, ink: labelInk(fill),
+          no: 1, fill: fill, ink: labelInk(fill), part: true,
+          strokeEdges: edges,
           pts: [wall(u0, -h / 2), wall(u1, -h / 2), wall(u1, h / 2), wall(u0, h / 2)],
         });
       }
@@ -980,8 +997,12 @@
           folded[2] * (1 - t) + flat[2] * t,
         ];
       }
+      var cEdges = [1];
+      if (i === 0) cEdges.push(0);
+      if (i === segs - 1) cEdges.push(2);
       polys.push({
-        no: 1, fill: fillS, ink: labelInk(fillS),
+        no: 1, fill: fillS, ink: labelInk(fillS), part: true,
+        strokeEdges: cEdges,
         pts: [conePoint(f, 0), conePoint(f, 1), conePoint(f2, 1), conePoint(f2, 0)],
       });
     }
