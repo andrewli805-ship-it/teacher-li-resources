@@ -226,6 +226,7 @@
     $("sn-opt-tabs").addEventListener("change", function () {
       state.tabs = $("sn-opt-tabs").checked;
       drawNet();
+      if (state.unfold > 0.02) drawSolid();
       updateA4();
       savePrefs();
     });
@@ -812,7 +813,7 @@
     img.src = url;
   }
   function downloadSolid() {
-    var pose = D.pose(model, currentNet(), state.webgl ? state.unfold : 0);
+    var pose = D.pose(model, currentNet(), state.webgl ? state.unfold : 0, state.tabs);
     if (!pose || !pose.polys) {
       $("sn-dl-solid").disabled = true;
       state.notice = t("sn.downloadFail");
@@ -863,8 +864,8 @@
     return m;
   }
   function fitDistance() {
-    var pose = D.pose(model, currentNet(), 0);
-    var flat = D.pose(model, currentNet(), 1);
+    var pose = D.pose(model, currentNet(), 0, state.tabs);
+    var flat = D.pose(model, currentNet(), 1, state.tabs);
     var r = Math.max(modelRadius(pose.polys || []), modelRadius(flat.polys || []));
     return r / Math.sin((32 * Math.PI) / 180) * 1.15;
   }
@@ -1059,8 +1060,12 @@
     drawList(front, 1);
     var lines = [];
     pose.polys.forEach(function (poly) {
-      for (var i = 0; i < poly.pts.length; i++) {
-        var a = poly.pts[i], b = poly.pts[(i + 1) % poly.pts.length];
+      var n = poly.pts.length;
+      var idxs = poly.strokeEdges || null;
+      var count = idxs ? idxs.length : n;
+      for (var i = 0; i < count; i++) {
+        var ei = idxs ? idxs[i] : i;
+        var a = poly.pts[ei], b = poly.pts[(ei + 1) % n];
         lines.push(a[0], a[1], a[2], 0.05, 0.11, 0.16, b[0], b[1], b[2], 0.05, 0.11, 0.16);
       }
     });
@@ -1073,6 +1078,27 @@
     }
     gl.deleteBuffer(buf);
   }
+  function faceAnchors(pose, eye) {
+    var groups = {};
+    pose.polys.forEach(function (poly) {
+      if (!poly.pts || !poly.pts.length) return;
+      var c = [0, 0, 0];
+      poly.pts.forEach(function (p) { c[0] += p[0]; c[1] += p[1]; c[2] += p[2]; });
+      c[0] /= poly.pts.length; c[1] /= poly.pts.length; c[2] /= poly.pts.length;
+      var key = String(poly.no);
+      if (!groups[key]) groups[key] = { no: poly.no, ink: poly.ink, parts: [] };
+      groups[key].parts.push({ c: c, front: facingCamera(poly.pts, eye) });
+    });
+    return Object.keys(groups).map(function (key) {
+      var g = groups[key];
+      var use = g.parts.filter(function (p) { return p.front; });
+      if (!use.length) use = g.parts;
+      var c = [0, 0, 0];
+      use.forEach(function (p) { c[0] += p.c[0]; c[1] += p.c[1]; c[2] += p.c[2]; });
+      c[0] /= use.length; c[1] /= use.length; c[2] /= use.length;
+      return { no: g.no, ink: g.ink, c: c, front: g.parts.some(function (p) { return p.front; }) };
+    });
+  }
   function paintNumbers(ctx, w, h, pose, force) {
     if (!state.labels && !force) return;
     var mvp = mvpMatrix(w, h);
@@ -1080,15 +1106,12 @@
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = "700 " + Math.max(16, Math.round(w / 48)) + "px sans-serif";
-    pose.polys.forEach(function (poly) {
-      if (!facingCamera(poly.pts, eye)) return;
-      var c = [0, 0, 0];
-      poly.pts.forEach(function (p) { c[0] += p[0]; c[1] += p[1]; c[2] += p[2]; });
-      c[0] /= poly.pts.length; c[1] /= poly.pts.length; c[2] /= poly.pts.length;
-      var s = project(mvp, c, w, h);
+    faceAnchors(pose, eye).forEach(function (face) {
+      if (!face.front) return;
+      var s = project(mvp, face.c, w, h);
       if (!s || s.z < -1 || s.z > 1) return;
-      ctx.fillStyle = poly.ink || NAVY;
-      ctx.fillText(String(poly.no), s.x, s.y);
+      ctx.fillStyle = face.ink || NAVY;
+      ctx.fillText(String(face.no), s.x, s.y);
     });
   }
   function placeHtmlLabels(pose) {
@@ -1099,19 +1122,16 @@
     var mvp = mvpMatrix(canvas.width, canvas.height);
     var eye = eyeVector();
     var rect = canvas.getBoundingClientRect();
-    pose.polys.forEach(function (poly) {
-      if (!facingCamera(poly.pts, eye)) return;
-      var c = [0, 0, 0];
-      poly.pts.forEach(function (p) { c[0] += p[0]; c[1] += p[1]; c[2] += p[2]; });
-      c[0] /= poly.pts.length; c[1] /= poly.pts.length; c[2] /= poly.pts.length;
-      var s = project(mvp, c, rect.width, rect.height);
+    faceAnchors(pose, eye).forEach(function (face) {
+      if (!face.front) return;
+      var s = project(mvp, face.c, rect.width, rect.height);
       if (!s) return;
       var el = document.createElement("span");
       el.className = "sn-face-label";
-      el.textContent = String(poly.no);
+      el.textContent = String(face.no);
       el.style.left = s.x + "px";
       el.style.top = s.y + "px";
-      el.style.color = poly.ink || NAVY;
+      el.style.color = face.ink || NAVY;
       box.appendChild(el);
     });
   }
@@ -1147,6 +1167,18 @@
       ctx.globalAlpha = 1;
       ctx.strokeStyle = NAVY;
       ctx.lineWidth = Math.max(1, w / 500);
+      var n = poly.pts.length;
+      var idxs = poly.strokeEdges || null;
+      var count = idxs ? idxs.length : n;
+      ctx.beginPath();
+      for (var ei = 0; ei < count; ei++) {
+        var e = idxs ? idxs[ei] : ei;
+        var a = project(mvp, poly.pts[e], w, h);
+        var b = project(mvp, poly.pts[(e + 1) % n], w, h);
+        if (!a || !b) continue;
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+      }
       ctx.stroke();
     });
     state.yaw = savedYaw;
@@ -1161,7 +1193,7 @@
   function drawSolid() {
     var net = currentNet();
     if (!model || !net) return;
-    var pose = D.pose(model, net, state.webgl ? state.unfold : 0);
+    var pose = D.pose(model, net, state.webgl ? state.unfold : 0, state.tabs);
     if (state.webgl) {
       resizeGL();
       paintGL(pose);
