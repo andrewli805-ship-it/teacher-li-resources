@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>立體展開圖 · 李順華老師資源分享網頁</title>
+  <meta name="description" content="本站自製工具，用來對照立體與其展開圖，亦可列印紙模型。" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="sn-page" data-nav="apps">
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-cn" data-i18n="brand.cn">李順華老師資源分享網頁</span>
+      <span class="brand-en" data-i18n="brand.en">Teacher Li Shun Wah Resources</span>
+    </a>
+    <div class="header-right">
+      <nav class="nav" aria-label="Main">
+        <a href="../index.html" data-nav-id="home" data-i18n="nav.home">首頁 Home</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../homework/index.html" data-nav-id="homework" data-i18n="nav.homework">交功課 Homework</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../gallery/index.html" data-nav-id="gallery" data-i18n="nav.gallery">展覽館 Exhibition</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../resources/index.html" data-nav-id="resources" data-i18n="nav.resources">資源分享 Resources</a>
+        <span class="nav-sep" aria-hidden="true">|</span>
+        <a href="../apps/index.html" data-nav-id="apps" data-i18n="nav.apps">有用程式 Apps</a>
+      </nav>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-lang="zh" aria-pressed="true" data-i18n="lang.zh">中文</button>
+        <button type="button" data-lang="en" aria-pressed="false" data-i18n="lang.en">EN</button>
+      </div>
+      <div class="site-auth" data-portal="../homework/portal.html">
+        <div class="site-auth-guest">
+          <a class="btn-login" href="../homework/portal.html" data-i18n="auth.login">登入 Login</a>
+        </div>
+        <div class="site-auth-user" hidden>
+          <span class="site-auth-name"></span>
+          <button type="button" class="btn-logout" data-i18n="auth.logout">登出</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1 data-i18n="page.app.solidNets">立體展開圖</h1>
+    <p data-i18n="page.lead.solidNets">本站自製工具，用來對照立體與其展開圖，亦可列印紙模型。</p>
+  </div>
+</div>
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="../index.html" data-i18n="crumb.home">首頁</a> /
+  <a href="index.html" data-i18n="hub.apps.title">有用程式分享區</a> /
+  <span data-i18n="page.app.solidNets">立體展開圖</span>
+</nav>
+<main class="main">
+  <div class="sn-workspace" id="sn-app">
+    <p class="sn-intro" id="sn-intro" hidden>
+      <span data-i18n="sn.intro">左邊旋轉立體，右邊對照展開圖。可用「展開」看摺合過程，亦可換展開圖或列印紙模型。</span>
+      <button type="button" class="sn-btn" id="sn-intro-dismiss" data-i18n="sn.intro.dismiss">知道了</button>
+    </p>
+    <div class="sn-solids" id="sn-solids" role="toolbar" data-i18n-aria="sn.aria.picker"></div>
+    <div class="sn-toolbar" role="toolbar">
+      <span class="sn-current-name sn-only-narrow" id="sn-current-name"></span>
+      <button type="button" class="sn-btn" id="sn-unfold" data-i18n="sn.unfold">展開</button>
+      <button type="button" class="sn-btn" id="sn-fold" data-i18n="sn.fold">摺合</button>
+      <div class="sn-net-switch" id="sn-net-switch">
+        <button type="button" class="sn-btn sn-icon-btn" id="sn-net-prev" aria-label="上一個">‹</button>
+        <button type="button" class="sn-btn" id="sn-net-label" aria-live="polite">展開圖 1／11</button>
+        <button type="button" class="sn-btn sn-icon-btn" id="sn-net-next" aria-label="下一個">›</button>
+        <button type="button" class="sn-btn" id="sn-net-all" data-i18n="sn.netAll">查看全部</button>
+      </div>
+      <button type="button" class="sn-btn sn-wide" id="sn-reset-view" data-i18n="sn.rotateView">重設視角</button>
+      <button type="button" class="sn-btn sn-wide" id="sn-labels" aria-pressed="true" data-i18n="sn.labels">顯示標號</button>
+      <button type="button" class="sn-btn sn-wide" id="sn-size-btn" aria-expanded="false" aria-controls="sn-size" data-i18n="sn.size">尺寸</button>
+      <button type="button" class="sn-btn sn-wide" id="sn-print-btn" data-i18n="sn.print">列印紙模型</button>
+      <button type="button" class="sn-btn sn-wide" id="sn-dl-net" data-i18n="sn.downloadNet">下載展開圖</button>
+      <button type="button" class="sn-btn sn-wide" id="sn-dl-solid" data-i18n="sn.downloadSolid">下載立體圖</button>
+      <div class="sn-menu-wrap">
+        <button type="button" class="sn-btn sn-menu-btn" id="sn-menu-btn" aria-expanded="false" aria-controls="sn-menu" data-i18n="sn.menu">選單</button>
+        <div class="sn-menu" id="sn-menu" role="menu" hidden>
+          <button type="button" class="sn-btn" role="menuitem" id="sn-reset-view-m" data-i18n="sn.rotateView">重設視角</button>
+          <button type="button" class="sn-btn" role="menuitem" id="sn-labels-m" data-i18n="sn.labels">顯示標號</button>
+          <button type="button" class="sn-btn" role="menuitem" id="sn-size-m" data-i18n="sn.size">尺寸</button>
+          <button type="button" class="sn-btn" role="menuitem" id="sn-print-m" data-i18n="sn.print">列印紙模型</button>
+          <button type="button" class="sn-btn" role="menuitem" id="sn-dl-net-m" data-i18n="sn.downloadNet">下載展開圖</button>
+          <button type="button" class="sn-btn" role="menuitem" id="sn-dl-solid-m" data-i18n="sn.downloadSolid">下載立體圖</button>
+        </div>
+      </div>
+    </div>
+    <div class="sn-slider" id="sn-slider-row">
+      <label for="sn-fold-slider" data-i18n="sn.foldSlider">展開程度</label>
+      <input type="range" id="sn-fold-slider" min="0" max="100" value="0" step="1" />
+    </div>
+    <div class="sn-views">
+      <section class="sn-solid-pane" aria-labelledby="sn-solid-label">
+        <h2 class="sn-sr" id="sn-solid-label" data-i18n="sn.aria.solid">立體</h2>
+        <div class="sn-stage" id="sn-stage" tabindex="0" role="application">
+          <canvas id="sn-gl"></canvas>
+          <canvas id="sn-iso" hidden></canvas>
+          <div class="sn-face-labels" id="sn-face-labels"></div>
+          <p class="sn-nowebgl" id="sn-nowebgl" hidden data-i18n="sn.noWebGL">此裝置無法旋轉立體，仍可查看、切換與列印展開圖。</p>
+          <div class="sn-zoom" role="group">
+            <button type="button" class="sn-btn sn-icon-btn" id="sn-zoom-in" data-i18n="sn.zoomIn" data-i18n-aria="sn.zoomIn">放大</button>
+            <button type="button" class="sn-btn sn-icon-btn" id="sn-zoom-out" data-i18n="sn.zoomOut" data-i18n-aria="sn.zoomOut">縮小</button>
+            <button type="button" class="sn-btn" id="sn-zoom-fit" data-i18n="sn.zoomFit">適合</button>
+          </div>
+        </div>
+      </section>
+      <section class="sn-net-pane" aria-labelledby="sn-net-heading">
+        <h2 class="sn-sr" id="sn-net-heading" data-i18n="sn.aria.net">展開圖</h2>
+        <div class="sn-net-tools">
+          <button type="button" class="sn-btn" id="sn-rot-net" data-i18n="sn.rotateNet">旋轉展開圖</button>
+          <button type="button" class="sn-btn" id="sn-flip-net" data-i18n="sn.flipNet">翻轉展開圖</button>
+        </div>
+        <div class="sn-net-stage" id="sn-net-stage">
+          <svg id="sn-net-svg" role="img"></svg>
+        </div>
+        <div class="sn-size" id="sn-size" hidden>
+          <div class="sn-size-head">
+            <strong data-i18n="sn.size">尺寸</strong>
+            <button type="button" class="sn-btn" id="sn-size-close" data-i18n="sn.close">關閉</button>
+          </div>
+          <div class="sn-size-fields" id="sn-size-fields"></div>
+          <p class="sn-a4" id="sn-a4"></p>
+          <button type="button" class="sn-btn" id="sn-size-reset" data-i18n="sn.sizeReset">恢復預設</button>
+        </div>
+      </section>
+    </div>
+    <p class="sn-status" id="sn-status" aria-live="polite"></p>
+  </div>
+</main>
+
+<div class="sn-sheet" id="sn-chooser" hidden>
+  <div class="sn-backdrop" data-sn-close="chooser"></div>
+  <div class="sn-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sn-chooser-title">
+    <div class="sn-sheet-head">
+      <h2 id="sn-chooser-title" data-i18n="sn.netAllTitle">選擇展開圖</h2>
+      <button type="button" class="sn-btn" id="sn-chooser-close" data-i18n="sn.close">關閉</button>
+    </div>
+    <div class="sn-chooser-grid" id="sn-chooser-grid"></div>
+  </div>
+</div>
+
+<div class="sn-sheet" id="sn-print-dialog" hidden>
+  <div class="sn-backdrop" data-sn-close="print"></div>
+  <div class="sn-sheet-panel sn-print-panel" role="dialog" aria-modal="true" aria-labelledby="sn-print-title">
+    <div class="sn-sheet-head">
+      <h2 id="sn-print-title" data-i18n="sn.print">列印紙模型</h2>
+      <button type="button" class="sn-btn" id="sn-print-close" data-i18n="sn.close">關閉</button>
+    </div>
+    <label class="sn-check"><input type="checkbox" id="sn-opt-tabs" checked /> <span data-i18n="sn.tabs">附黏貼邊</span></label>
+    <div class="sn-radio" role="group">
+      <label class="sn-check"><input type="radio" name="sn-print-color" id="sn-opt-color" checked /> <span data-i18n="sn.printColor">彩色</span></label>
+      <label class="sn-check"><input type="radio" name="sn-print-color" id="sn-opt-mono" /> <span data-i18n="sn.printMono">黑白</span></label>
+    </div>
+    <label class="sn-check"><input type="checkbox" id="sn-opt-labels" checked /> <span data-i18n="sn.printLabels">列印標號</span></label>
+    <p class="sn-a4" id="sn-print-a4"></p>
+    <div class="sn-sheet-actions">
+      <button type="button" class="sn-btn sn-btn-primary" id="sn-print-go" data-i18n="sn.printGo">列印</button>
+      <button type="button" class="sn-btn" id="sn-print-cancel" data-i18n="sn.cancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<div class="sn-print-root" id="sn-print-root"></div>
+
+<footer class="site-footer">
+  <p><strong data-i18n="brand.cn">李順華老師資源分享網頁</strong></p>
+  <p data-i18n="footer">李順華老師資源分享網頁 · 僅供校內預覽 · 連結待補</p>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+<script src="../js/i18n.js" defer></script>
+<script src="../js/main.js" defer></script>
+<script src="../js/supabase-config.js" defer></script>
+<script src="../js/site-auth.js" defer></script>
+<script src="../js/solid-nets-data.js" defer></script>
+<script src="../js/solid-nets.js" defer></script>
+</body>
+</html>
