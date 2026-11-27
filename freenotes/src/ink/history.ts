@@ -26,7 +26,7 @@ export class StrokeHistory {
   undo(strokes: Stroke[]): HistoryAction | undefined {
     const action = this.undoStack.pop();
     if (!action) return undefined;
-    applyInverse(action, strokes);
+    StrokeHistory.applyInverse(action, strokes);
     this.redoStack.push(action);
     return action;
   }
@@ -34,7 +34,7 @@ export class StrokeHistory {
   redo(strokes: Stroke[]): HistoryAction | undefined {
     const action = this.redoStack.pop();
     if (!action) return undefined;
-    applyForward(action, strokes);
+    StrokeHistory.applyForward(action, strokes);
     this.undoStack.push(action);
     return action;
   }
@@ -51,28 +51,62 @@ export class StrokeHistory {
   peekRedo(): HistoryAction | undefined {
     return this.redoStack[this.redoStack.length - 1];
   }
+
+  static applyForward(action: HistoryAction, strokes: Stroke[]): void {
+    applyForward(action, strokes);
+  }
+
+  static applyInverse(action: HistoryAction, strokes: Stroke[]): void {
+    applyInverse(action, strokes);
+  }
 }
 
-export function applyForward(action: HistoryAction, strokes: Stroke[]): void {
+function applyForward(action: HistoryAction, strokes: Stroke[]): void {
   if (action.type === "add") {
-    if (!strokes.some((s) => s.id === action.stroke.id)) {
-      strokes.push(action.stroke);
+    if (!strokes.some((s) => s.id === action.stroke.id)) strokes.push(action.stroke);
+    return;
+  }
+  if (action.type === "remove") {
+    const ids = new Set(action.strokes.map((s) => s.id));
+    for (let i = strokes.length - 1; i >= 0; i--) {
+      if (ids.has(strokes[i].id)) strokes.splice(i, 1);
     }
     return;
   }
-  const ids = new Set(action.strokes.map((s) => s.id));
-  for (let i = strokes.length - 1; i >= 0; i--) {
-    if (ids.has(strokes[i].id)) strokes.splice(i, 1);
+  let cursor = 0;
+  for (let i = 0; i < action.removed.length; i++) {
+    const count = action.counts[i] ?? 0;
+    const chunk = action.added.slice(cursor, cursor + count);
+    cursor += count;
+    const index = strokes.findIndex((s) => s.id === action.removed[i].id);
+    if (index >= 0) strokes.splice(index, 1, ...chunk);
   }
 }
 
-export function applyInverse(action: HistoryAction, strokes: Stroke[]): void {
+function applyInverse(action: HistoryAction, strokes: Stroke[]): void {
   if (action.type === "add") {
-    const i = strokes.findIndex((s) => s.id === action.stroke.id);
-    if (i >= 0) strokes.splice(i, 1);
+    const index = strokes.findIndex((s) => s.id === action.stroke.id);
+    if (index >= 0) strokes.splice(index, 1);
     return;
   }
-  for (const stroke of action.strokes) {
-    if (!strokes.some((s) => s.id === stroke.id)) strokes.push(stroke);
+  if (action.type === "remove") {
+    for (const stroke of action.strokes) {
+      if (!strokes.some((s) => s.id === stroke.id)) strokes.push(stroke);
+    }
+    return;
+  }
+  const addedIds = new Set(action.added.map((s) => s.id));
+  for (let i = strokes.length - 1; i >= 0; i--) {
+    if (addedIds.has(strokes[i].id)) strokes.splice(i, 1);
+  }
+  const restoring = action.removed.map((stroke, i) => ({
+    stroke,
+    index: action.at[i] ?? strokes.length,
+  }));
+  restoring.sort((a, b) => a.index - b.index);
+  for (const { stroke, index } of restoring) {
+    if (strokes.some((s) => s.id === stroke.id)) continue;
+    const insertAt = Math.min(Math.max(0, index), strokes.length);
+    strokes.splice(insertAt, 0, stroke);
   }
 }

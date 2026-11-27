@@ -12,8 +12,9 @@ import {
   type FreenotesDB,
 } from "../db";
 import { uid } from "../id";
+import { eraseStrokes } from "../ink/eraseSplit";
 import { StrokeHistory } from "../ink/history";
-import { simplifyPoints, strokeHitsPath } from "../ink/geometry";
+import { simplifyPoints } from "../ink/geometry";
 import { drawStroke, renderStrokes, resizeCanvas } from "../ink/render";
 import {
   A4_HEIGHT,
@@ -24,6 +25,7 @@ import {
   PRESET_COLORS,
   eraserRadiusFromStorage,
   type BackgroundRecord,
+  type HistoryAction,
   type Notebook,
   type Page,
   type Point,
@@ -81,7 +83,8 @@ class Editor {
   private drawingId: number | null = null;
   private currentStroke: Stroke | null = null;
   private eraserPath: Point[] = [];
-  private erased: Stroke[] = [];
+  /** Page strokes as they were at pointerdown, before this eraser gesture. */
+  private eraseSnapshot: Stroke[] | null = null;
   private pinching = false;
   private pinch:
     | { dist: number; scale: number; cx: number; cy: number; view: ViewTransform }
@@ -643,11 +646,15 @@ class Editor {
         typeof e.getCoalescedEvents === "function" && e.getCoalescedEvents().length
           ? e.getCoalescedEvents()
           : [e];
-      for (const ev of events) this.appendPoint(ev);
       if (this.tool === "eraser") {
-        const last = this.eraserPath[this.eraserPath.length - 1];
-        if (last) this.showEraserPreview(last.x, last.y);
+        for (let i = 0; i < events.length; i++) {
+          this.pushEraserPoint(this.eventToPage(events[i]), i === events.length - 1);
+        }
+        const tip = this.eraserPath[this.eraserPath.length - 1];
+        if (tip) this.showEraserPreview(tip.x, tip.y);
         this.applyEraser();
+      } else {
+        for (const ev of events) this.appendPoint(ev);
       }
       this.renderDraft();
     }
@@ -660,6 +667,9 @@ class Editor {
     this.ignoreUntilUp.delete(e.pointerId);
     if (e.pointerType === "pen" && ![...this.pointers.values()].some((p) => p.type === "pen")) {
       this.penActive = false;
+    }
+    if (wasDrawing && this.eraseSnapshot && !wasPinching) {
+      this.pushEraserPoint(this.eventToPage(e), true);
     }
     if (wasDrawing) {
       void this.endStroke();
@@ -728,9 +738,10 @@ class Editor {
     this.drawingId = e.pointerId;
     const point = this.eventToPage(e);
     if (this.tool === "eraser") {
+      this.eraseSnapshot = this.strokes.slice();
       this.eraserPath = [point];
-      this.erased = [];
       this.showEraserPreview(point.x, point.y);
+      this.applyEraser();
       this.renderDraft();
       return;
     }
@@ -747,32 +758,36 @@ class Editor {
 
   private appendPoint(e: PointerEvent): void {
     const point = this.eventToPage(e);
-    if (this.tool === "eraser") {
-      this.eraserPath.push(point);
-      return;
-    }
     if (!this.currentStroke) return;
     const last = this.currentStroke.points[this.currentStroke.points.length - 1];
     if (last && Math.hypot(last.x - point.x, last.y - point.y) < 0.35) return;
     this.currentStroke.points.push(point);
   }
 
+  private pushEraserPoint(point: Point, force: boolean): void {
+    const last = this.eraserPath[this.eraserPath.length - 1];
+    if (!last) {
+      this.eraserPath.push(point);
+      return;
+    }
+    const distance = Math.hypot(last.x - point.x, last.y - point.y);
+    if (distance < 1e-4) return;
+    if (!force && distance < 0.35) return;
+    this.eraserPath.push(point);
+  }
+
   private applyEraser(): void {
-    const hit = this.strokes.filter((s) =>
-      strokeHitsPath(s, this.eraserPath, this.eraserRadius),
-    );
-    if (!hit.length) return;
-    const ids = new Set(hit.map((s) => s.id));
-    this.strokes = this.strokes.filter((s) => !ids.has(s.id));
-    this.erased.push(...hit);
-    this.eraserPath = this.eraserPath.slice(-2);
+    if (!this.eraseSnapshot) return;
+    const result = eraseStrokes(this.eraseSnapshot, this.eraserPath, this.eraserRadius, uid);
+    if (sameStrokeRefs(result.strokes, this.strokes)) return;
+    this.strokes = result.strokes;
     this.redrawInk();
   }
 
   private cancelStroke(): void {
-    if (this.erased.length) {
-      this.strokes.push(...this.erased);
-      this.erased = [];
+    if (this.eraseSnapshot) {
+      this.strokes = this.eraseSnapshot;
+      this.eraseSnapshot = null;
       this.redrawInk();
     }
     this.currentStroke = null;
@@ -783,17 +798,33 @@ class Editor {
 
   private async endStroke(): Promise<void> {
     const drawing = this.currentStroke;
-    const erased = this.erased.slice();
+    const snapshot = this.eraseSnapshot;
+    const path = this.eraserPath.slice();
+    const radius = this.eraserRadius;
     this.currentStroke = null;
     this.eraserPath = [];
-    this.erased = [];
+    this.eraseSnapshot = null;
     this.drawingId = null;
 
-    if (this.tool === "eraser") {
-      this.renderDraft();
-      if (!erased.length) return;
-      this.history.push({ type: "remove", pageId: this.page.id, strokes: erased });
-      await deleteStrokes(this.db, erased.map((s) => s.id));
+    if (snapshot) {
+      const result = eraseStrokes(snapshot, path, radius, uid);
+      this.strokes = result.strokes;
+      this.redrawInk();
+      if (result.removed.length === 0) return;
+      const action: HistoryAction = {
+        type: "replace",
+        pageId: this.page.id,
+        removed: result.removed,
+        added: result.added,
+        at: result.at,
+        counts: result.counts,
+      };
+      this.history.push(action);
+      await deleteStrokes(
+        this.db,
+        result.removed.map((stroke) => stroke.id),
+      );
+      for (const stroke of result.added) await putStroke(this.db, stroke);
       await touchNotebook(this.db, this.notebookId);
       this.syncHistoryButtons();
       return;
@@ -1100,20 +1131,42 @@ class Editor {
     this.syncHistoryButtons();
   }
 
-  private async persistHistory(
-    action: import("../types").HistoryAction,
-    dir: "undo" | "redo",
-  ): Promise<void> {
+  private async persistHistory(action: HistoryAction, dir: "undo" | "redo"): Promise<void> {
     if (action.type === "add") {
       if (dir === "undo") await deleteStrokes(this.db, [action.stroke.id]);
       else await putStroke(this.db, action.stroke);
+    } else if (action.type === "remove") {
+      if (dir === "undo") {
+        for (const stroke of action.strokes) await putStroke(this.db, stroke);
+      } else {
+        await deleteStrokes(
+          this.db,
+          action.strokes.map((stroke) => stroke.id),
+        );
+      }
     } else if (dir === "undo") {
-      for (const stroke of action.strokes) await putStroke(this.db, stroke);
+      await deleteStrokes(
+        this.db,
+        action.added.map((stroke) => stroke.id),
+      );
+      for (const stroke of action.removed) await putStroke(this.db, stroke);
     } else {
-      await deleteStrokes(this.db, action.strokes.map((s) => s.id));
+      await deleteStrokes(
+        this.db,
+        action.removed.map((stroke) => stroke.id),
+      );
+      for (const stroke of action.added) await putStroke(this.db, stroke);
     }
     await touchNotebook(this.db, this.notebookId);
   }
+}
+
+function sameStrokeRefs(next: Stroke[], current: Stroke[]): boolean {
+  if (next.length !== current.length) return false;
+  for (let i = 0; i < next.length; i++) {
+    if (next[i] !== current[i]) return false;
+  }
+  return true;
 }
 
 const ERASER_RADIUS_STORAGE_KEY = "freenotes-eraser-radius";

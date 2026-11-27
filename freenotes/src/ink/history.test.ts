@@ -44,6 +44,114 @@ describe("StrokeHistory", () => {
     expect(strokes.map((s) => s.id)).toEqual(["a"]);
   });
 
+  it("undoes a partial erase back to the original strokes, then redoes the remnants", () => {
+    const below = makeStroke("below");
+    const target = makeStroke("target");
+    target.points = [
+      { x: 0, y: 0, p: 0.2, t: 0 },
+      { x: 100, y: 0, p: 0.9, t: 40 },
+    ];
+    const above = makeStroke("above");
+    const left = makeStroke("left");
+    const right = makeStroke("right");
+    const strokes = [below, target, above];
+    const history = new StrokeHistory();
+    strokes.splice(1, 1, left, right);
+    history.push({
+      type: "replace",
+      pageId: "page",
+      removed: [target],
+      added: [left, right],
+      at: [1],
+      counts: [2],
+    });
+
+    history.undo(strokes);
+    expect(strokes.map((s) => s.id)).toEqual(["below", "target", "above"]);
+    expect(strokes[1]).toBe(target);
+    expect(strokes[1].points).toHaveLength(2);
+
+    history.redo(strokes);
+    expect(strokes.map((s) => s.id)).toEqual(["below", "left", "right", "above"]);
+  });
+
+  it("restores a fully erased stroke between two kept strokes", () => {
+    const a = makeStroke("a");
+    const b = makeStroke("b");
+    const c = makeStroke("c");
+    const d = makeStroke("d");
+    const e = makeStroke("e");
+    const b1 = makeStroke("b1");
+    const b2 = makeStroke("b2");
+    const strokes = [a, b1, b2, c, e];
+    const history = new StrokeHistory();
+    history.push({
+      type: "replace",
+      pageId: "page",
+      removed: [b, d],
+      added: [b1, b2],
+      at: [1, 3],
+      counts: [2, 0],
+    });
+
+    history.undo(strokes);
+    expect(strokes.map((s) => s.id)).toEqual(["a", "b", "c", "d", "e"]);
+    history.redo(strokes);
+    expect(strokes.map((s) => s.id)).toEqual(["a", "b1", "b2", "c", "e"]);
+  });
+
+  it("applies replace forward without pushing remnants above later strokes", () => {
+    const a = makeStroke("a");
+    const b = makeStroke("b");
+    const c = makeStroke("c");
+    const d = makeStroke("d");
+    const strokes = [a, b, c, d];
+    const b1 = makeStroke("b1");
+    const b2 = makeStroke("b2");
+    StrokeHistory.applyForward(
+      {
+        type: "replace",
+        pageId: "page",
+        removed: [b, d],
+        added: [b1, b2],
+        at: [1, 3],
+        counts: [2, 0],
+      },
+      strokes,
+    );
+    expect(strokes.map((s) => s.id)).toEqual(["a", "b1", "b2", "c"]);
+    StrokeHistory.applyInverse(
+      {
+        type: "replace",
+        pageId: "page",
+        removed: [b, d],
+        added: [b1, b2],
+        at: [1, 3],
+        counts: [2, 0],
+      },
+      strokes,
+    );
+    expect(strokes.map((s) => s.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
+  it("still caps history at 80 steps", () => {
+    const history = new StrokeHistory();
+    for (let i = 0; i < 81; i++) {
+      history.push({
+        type: "replace",
+        pageId: "page",
+        removed: [],
+        added: [],
+        at: [],
+        counts: [],
+      });
+    }
+    let steps = 0;
+    const strokes: Stroke[] = [];
+    while (history.undo(strokes)) steps += 1;
+    expect(steps).toBe(80);
+  });
+
   it("clears redo after a new action", () => {
     const strokes: Stroke[] = [];
     const history = new StrokeHistory();
