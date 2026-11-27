@@ -12,16 +12,20 @@ import {
   type FreenotesDB,
 } from "../db";
 import { uid } from "../id";
+import { eraseStrokes } from "../ink/eraseSplit";
 import { StrokeHistory } from "../ink/history";
-import { simplifyPoints, strokeHitsPath } from "../ink/geometry";
+import { simplifyPoints } from "../ink/geometry";
 import { drawStroke, renderStrokes, resizeCanvas } from "../ink/render";
 import {
   A4_HEIGHT,
   A4_WIDTH,
+  ERASER_RADII,
   HIGHLIGHTER_WIDTHS,
   PEN_WIDTHS,
   PRESET_COLORS,
+  eraserRadiusFromStorage,
   type BackgroundRecord,
+  type HistoryAction,
   type Notebook,
   type Page,
   type Point,
@@ -67,13 +71,20 @@ class Editor {
   private color: string = PRESET_COLORS[0];
   private penWidth: number = PEN_WIDTHS[1];
   private highlighterWidth: number = HIGHLIGHTER_WIDTHS[1];
+  private eraserRadius = readEraserRadius();
+  private eraserPreview: { x: number; y: number } | null = null;
+  private eraserPreviewAlpha = 1;
+  private eraserFadeRaf = 0;
+  private mouseInView = false;
+  private mouseClient: { x: number; y: number } | null = null;
   private view: ViewTransform = { x: 0, y: 0, scale: 1 };
   private pointers = new Map<number, { x: number; y: number; type: string }>();
   private ignoreUntilUp = new Set<number>();
   private drawingId: number | null = null;
   private currentStroke: Stroke | null = null;
   private eraserPath: Point[] = [];
-  private erased: Stroke[] = [];
+  /** Page strokes as they were at pointerdown, before this eraser gesture. */
+  private eraseSnapshot: Stroke[] | null = null;
   private pinching = false;
   private pinch:
     | { dist: number; scale: number; cx: number; cy: number; view: ViewTransform }
@@ -123,10 +134,12 @@ class Editor {
   }
 
   private get widths(): readonly number[] {
+    if (this.tool === "eraser") return ERASER_RADII;
     return this.tool === "highlighter" ? HIGHLIGHTER_WIDTHS : PEN_WIDTHS;
   }
 
   private get width(): number {
+    if (this.tool === "eraser") return this.eraserRadius;
     return this.tool === "highlighter" ? this.highlighterWidth : this.penWidth;
   }
 
@@ -180,7 +193,7 @@ class Editor {
         <button type="button" class="dock-btn" data-tool="pen" aria-label="原子筆">${icon("pen")}<span>筆</span></button>
         <button type="button" class="dock-btn" data-tool="highlighter" aria-label="螢光筆">${icon("highlighter")}<span>螢光</span></button>
         <button type="button" class="dock-btn" data-tool="eraser" aria-label="橡皮擦">${icon("eraser")}<span>擦去</span></button>
-        <button type="button" class="dock-btn" data-act="palette" aria-label="顏色"><span class="dock-color" data-role="dock-color"></span><span>顏色</span></button>
+        <button type="button" class="dock-btn" data-act="palette" data-role="palette-btn" aria-label="顏色"><span class="dock-glyph"><span class="dock-color" data-role="dock-color"></span><span class="dock-size" data-role="dock-size" data-size="10" hidden><svg data-size="6" viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3.25" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><svg data-size="10" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="5.25" fill="none" stroke="currentColor" stroke-width="1.5"/></svg><svg data-size="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="8.25" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></span><span data-role="palette-label">顏色</span></button>
         <button type="button" class="dock-btn" data-act="undo" aria-label="復原">${icon("undo")}<span>復原</span></button>
         <button type="button" class="dock-btn" data-act="redo" aria-label="重做">${icon("redo")}<span>重做</span></button>
         <button type="button" class="dock-btn" data-act="export" aria-label="匯出">${icon("export")}<span>匯出</span></button>
@@ -256,14 +269,21 @@ class Editor {
     const noMenu = (e: Event) => e.preventDefault();
     viewport.addEventListener("contextmenu", noMenu);
     this.unsubs.push(() => viewport.removeEventListener("contextmenu", noMenu));
+
+    const leave = (e: PointerEvent) => this.pointerLeave(e);
+    viewport.addEventListener("pointerleave", leave);
+    this.unsubs.push(() => viewport.removeEventListener("pointerleave", leave));
   }
 
   private async onAction(btn: HTMLElement): Promise<void> {
     const tool = btn.dataset.tool as Tool | undefined;
     if (tool) {
+      const previous = this.tool;
       this.tool = tool;
+      if (tool !== "eraser") this.clearEraserPreview();
       this.syncToolButtons();
       this.renderWidths();
+      if (tool === "eraser" && previous !== "eraser") this.updateEraserHover();
       return;
     }
     if (btn.dataset.color) {
@@ -277,6 +297,16 @@ class Editor {
     }
     if (btn.dataset.width) {
       const w = Number(btn.dataset.width);
+      if (this.tool === "eraser") {
+        if ((ERASER_RADII as readonly number[]).includes(w)) {
+          this.eraserRadius = w;
+          writeEraserRadius(w);
+          this.syncPaletteButton();
+          this.renderWidths();
+          if (this.eraserPreview) this.renderDraft();
+        }
+        return;
+      }
       if (this.tool === "highlighter") this.highlighterWidth = w;
       else this.penWidth = w;
       this.renderWidths();
@@ -368,6 +398,7 @@ class Editor {
   private fitAndRedraw(): void {
     this.fitView();
     this.redrawInk();
+    this.updateEraserHover();
   }
 
   private applyView(): void {
@@ -386,19 +417,33 @@ class Editor {
     const ctx = resizeCanvas(ink, width, height, q);
     ctx.clearRect(0, 0, width, height);
     renderStrokes(ctx, this.strokes);
-    const dctx = resizeCanvas(draft, width, height, q);
-    dctx.clearRect(0, 0, width, height);
+    resizeCanvas(draft, width, height, q);
+    this.renderDraft();
   }
 
   private renderDraft(): void {
-    const draft = this.qs<HTMLCanvasElement>("[data-role=draft]");
-    const ctx = draft.getContext("2d");
-    if (!ctx) return;
-    const q = this.quality();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    ctx.setTransform(dpr * q, 0, 0, dpr * q, 0, 0);
+    const draft = this.root.querySelector<HTMLCanvasElement>("[data-role=draft]");
+    if (!draft || !this.pages.length) return;
+    const ctx = resizeCanvas(draft, this.page.width, this.page.height, this.quality());
     ctx.clearRect(0, 0, this.page.width, this.page.height);
     if (this.currentStroke) drawStroke(ctx, this.currentStroke);
+    this.paintEraserPreview(ctx);
+  }
+
+  private paintEraserPreview(ctx: CanvasRenderingContext2D): void {
+    if (this.tool !== "eraser" || this.pinching || !this.eraserPreview) return;
+    const { x, y } = this.eraserPreview;
+    ctx.save();
+    ctx.globalAlpha = this.eraserPreviewAlpha;
+    ctx.beginPath();
+    ctx.arc(x, y, this.eraserRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(36, 31, 26, 0.08)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(36, 31, 26, 0.55)";
+    // 1.5 page px at 1:1, tweaked so the ring stays about 1–2 CSS px as zoom changes.
+    ctx.lineWidth = 1.5 / Math.max(this.view.scale, 0.25);
+    ctx.stroke();
+    ctx.restore();
   }
 
   private updateIndicator(): void {
@@ -424,20 +469,19 @@ class Editor {
         return `<button type="button" class="swatch ${on ? "active" : ""}" data-color="${c}" style="--swatch:${c}" aria-label="顏色 ${c}" aria-pressed="${on}"></button>`;
       })
       .join("");
-    const pop = this.root.querySelector("[data-role=palette-pop]");
-    if (pop && !pop.hasAttribute("hidden")) {
-      pop.innerHTML = host.innerHTML + this.widthChips();
-    }
     const dock = this.root.querySelector("[data-role=dock-color]") as HTMLElement | null;
     if (dock) dock.style.background = this.color;
+    this.refreshOpenPalette();
   }
 
   private widthChips(): string {
+    const labels = ["細", "中", "粗"];
     return `<div class="widths">${this.widths
       .map((w, i) => {
-        const labels = ["細", "中", "粗"];
         const on = w === this.width;
-        return `<button type="button" class="width-chip ${on ? "active" : ""}" data-width="${w}" aria-pressed="${on}">${labels[i]}</button>`;
+        const aria =
+          this.tool === "eraser" ? ` aria-label="擦除範圍：${labels[i]}"` : "";
+        return `<button type="button" class="width-chip ${on ? "active" : ""}" data-width="${w}" aria-pressed="${on}"${aria}>${labels[i]}</button>`;
       })
       .join("")}</div>`;
   }
@@ -445,6 +489,34 @@ class Editor {
   private renderWidths(): void {
     const host = this.root.querySelector("[data-role=widths]");
     if (host) host.innerHTML = this.widthChips();
+    this.refreshOpenPalette();
+  }
+
+  private paletteMarkup(): string {
+    if (this.tool === "eraser") return this.widthChips();
+    const colors = this.root.querySelector("[data-role=colors]")?.innerHTML ?? "";
+    return `${colors}${this.widthChips()}`;
+  }
+
+  private refreshOpenPalette(): void {
+    const pop = this.root.querySelector("[data-role=palette-pop]");
+    if (!pop || pop.hasAttribute("hidden")) return;
+    pop.innerHTML = this.paletteMarkup();
+  }
+
+  private syncPaletteButton(): void {
+    const eraser = this.tool === "eraser";
+    const btn = this.root.querySelector<HTMLElement>("[data-role=palette-btn]");
+    const label = this.root.querySelector<HTMLElement>("[data-role=palette-label]");
+    const colorDot = this.root.querySelector<HTMLElement>("[data-role=dock-color]");
+    const sizeDot = this.root.querySelector<HTMLElement>("[data-role=dock-size]");
+    if (btn) btn.setAttribute("aria-label", eraser ? "擦除大小" : "顏色");
+    if (label) label.textContent = eraser ? "大小" : "顏色";
+    if (colorDot) colorDot.hidden = eraser;
+    if (sizeDot) {
+      sizeDot.hidden = !eraser;
+      sizeDot.dataset.size = String(this.eraserRadius);
+    }
   }
 
   private syncToolButtons(): void {
@@ -453,6 +525,7 @@ class Editor {
       btn.setAttribute("aria-pressed", String(btn.dataset.tool === this.tool));
     });
     this.root.classList.toggle("tool-eraser", this.tool === "eraser");
+    this.syncPaletteButton();
     this.renderColors();
   }
 
@@ -474,7 +547,7 @@ class Editor {
   private togglePalette(): void {
     const pop = this.qs("[data-role=palette-pop]");
     if (pop.hasAttribute("hidden")) {
-      pop.innerHTML = `${this.qs("[data-role=colors]").innerHTML}${this.widthChips()}`;
+      pop.innerHTML = this.paletteMarkup();
       pop.removeAttribute("hidden");
     } else {
       pop.setAttribute("hidden", "");
@@ -542,6 +615,7 @@ class Editor {
 
     const live = this.livePointers();
     if (live.length >= 2) {
+      this.clearEraserPreview();
       this.cancelStroke();
       this.beginPinch();
       return;
@@ -550,11 +624,19 @@ class Editor {
   }
 
   private pointerMove(e: PointerEvent): void {
-    if (!this.pointers.has(e.pointerId)) return;
+    if (e.pointerType === "mouse") {
+      this.mouseInView = true;
+      this.mouseClient = { x: e.clientX, y: e.clientY };
+    }
+    if (!this.pointers.has(e.pointerId)) {
+      if (e.pointerType === "mouse") this.updateEraserHover();
+      return;
+    }
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
     if (this.ignoreUntilUp.has(e.pointerId)) return;
     if (this.pinching) {
       e.preventDefault();
+      this.clearEraserPreview();
       this.updatePinch();
       return;
     }
@@ -564,19 +646,32 @@ class Editor {
         typeof e.getCoalescedEvents === "function" && e.getCoalescedEvents().length
           ? e.getCoalescedEvents()
           : [e];
-      for (const ev of events) this.appendPoint(ev);
-      if (this.tool === "eraser") this.applyEraser();
-      else this.renderDraft();
+      if (this.tool === "eraser") {
+        for (let i = 0; i < events.length; i++) {
+          this.pushEraserPoint(this.eventToPage(events[i]), i === events.length - 1);
+        }
+        const tip = this.eraserPath[this.eraserPath.length - 1];
+        if (tip) this.showEraserPreview(tip.x, tip.y);
+        this.applyEraser();
+      } else {
+        for (const ev of events) this.appendPoint(ev);
+      }
+      this.renderDraft();
     }
   }
 
   private pointerUp(e: PointerEvent): void {
+    const wasPinching = this.pinching;
+    const wasDrawing = this.drawingId === e.pointerId;
     this.pointers.delete(e.pointerId);
     this.ignoreUntilUp.delete(e.pointerId);
     if (e.pointerType === "pen" && ![...this.pointers.values()].some((p) => p.type === "pen")) {
       this.penActive = false;
     }
-    if (this.drawingId === e.pointerId) {
+    if (wasDrawing && this.eraseSnapshot && !wasPinching) {
+      this.pushEraserPoint(this.eventToPage(e), true);
+    }
+    if (wasDrawing) {
       void this.endStroke();
     }
     if (this.pinching && this.livePointers().length < 2) {
@@ -584,6 +679,17 @@ class Editor {
       for (const [id] of this.pointers) this.ignoreUntilUp.add(id);
       this.redrawInk();
     }
+    if (wasDrawing && !wasPinching && this.tool === "eraser") {
+      this.finishEraserGesture(e);
+    }
+  }
+
+  private pointerLeave(e: PointerEvent): void {
+    if (e.pointerType !== "mouse") return;
+    this.mouseInView = false;
+    this.mouseClient = null;
+    if (this.drawingId !== null || this.pinching) return;
+    this.clearEraserPreview();
   }
 
   private livePointers(): [number, { x: number; y: number; type: string }][] {
@@ -594,6 +700,7 @@ class Editor {
     const pts = this.livePointers().map(([, p]) => p);
     if (pts.length < 2) return;
     this.pinching = true;
+    this.clearEraserPreview();
     this.pinch = {
       dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1,
       scale: this.view.scale,
@@ -631,8 +738,11 @@ class Editor {
     this.drawingId = e.pointerId;
     const point = this.eventToPage(e);
     if (this.tool === "eraser") {
+      this.eraseSnapshot = this.strokes.slice();
       this.eraserPath = [point];
-      this.erased = [];
+      this.showEraserPreview(point.x, point.y);
+      this.applyEraser();
+      this.renderDraft();
       return;
     }
     this.currentStroke = {
@@ -648,30 +758,36 @@ class Editor {
 
   private appendPoint(e: PointerEvent): void {
     const point = this.eventToPage(e);
-    if (this.tool === "eraser") {
-      this.eraserPath.push(point);
-      return;
-    }
     if (!this.currentStroke) return;
     const last = this.currentStroke.points[this.currentStroke.points.length - 1];
     if (last && Math.hypot(last.x - point.x, last.y - point.y) < 0.35) return;
     this.currentStroke.points.push(point);
   }
 
+  private pushEraserPoint(point: Point, force: boolean): void {
+    const last = this.eraserPath[this.eraserPath.length - 1];
+    if (!last) {
+      this.eraserPath.push(point);
+      return;
+    }
+    const distance = Math.hypot(last.x - point.x, last.y - point.y);
+    if (distance < 1e-4) return;
+    if (!force && distance < 0.35) return;
+    this.eraserPath.push(point);
+  }
+
   private applyEraser(): void {
-    const hit = this.strokes.filter((s) => strokeHitsPath(s, this.eraserPath, 10));
-    if (!hit.length) return;
-    const ids = new Set(hit.map((s) => s.id));
-    this.strokes = this.strokes.filter((s) => !ids.has(s.id));
-    this.erased.push(...hit);
-    this.eraserPath = this.eraserPath.slice(-2);
+    if (!this.eraseSnapshot) return;
+    const result = eraseStrokes(this.eraseSnapshot, this.eraserPath, this.eraserRadius, uid);
+    if (sameStrokeRefs(result.strokes, this.strokes)) return;
+    this.strokes = result.strokes;
     this.redrawInk();
   }
 
   private cancelStroke(): void {
-    if (this.erased.length) {
-      this.strokes.push(...this.erased);
-      this.erased = [];
+    if (this.eraseSnapshot) {
+      this.strokes = this.eraseSnapshot;
+      this.eraseSnapshot = null;
       this.redrawInk();
     }
     this.currentStroke = null;
@@ -682,17 +798,33 @@ class Editor {
 
   private async endStroke(): Promise<void> {
     const drawing = this.currentStroke;
-    const erased = this.erased.slice();
+    const snapshot = this.eraseSnapshot;
+    const path = this.eraserPath.slice();
+    const radius = this.eraserRadius;
     this.currentStroke = null;
     this.eraserPath = [];
-    this.erased = [];
+    this.eraseSnapshot = null;
     this.drawingId = null;
 
-    if (this.tool === "eraser") {
-      this.renderDraft();
-      if (!erased.length) return;
-      this.history.push({ type: "remove", pageId: this.page.id, strokes: erased });
-      await deleteStrokes(this.db, erased.map((s) => s.id));
+    if (snapshot) {
+      const result = eraseStrokes(snapshot, path, radius, uid);
+      this.strokes = result.strokes;
+      this.redrawInk();
+      if (result.removed.length === 0) return;
+      const action: HistoryAction = {
+        type: "replace",
+        pageId: this.page.id,
+        removed: result.removed,
+        added: result.added,
+        at: result.at,
+        counts: result.counts,
+      };
+      this.history.push(action);
+      await deleteStrokes(
+        this.db,
+        result.removed.map((stroke) => stroke.id),
+      );
+      for (const stroke of result.added) await putStroke(this.db, stroke);
       await touchNotebook(this.db, this.notebookId);
       this.syncHistoryButtons();
       return;
@@ -737,6 +869,92 @@ class Editor {
       this.view.y -= e.deltaY;
     }
     this.applyView();
+    this.updateEraserHover();
+  }
+
+  private showEraserPreview(x: number, y: number): void {
+    this.cancelEraserFade();
+    this.eraserPreview = { x, y };
+    this.eraserPreviewAlpha = 1;
+  }
+
+  private updateEraserHover(): void {
+    if (this.tool !== "eraser" || this.pinching || this.drawingId !== null) return;
+    if (!this.mouseInView || !this.mouseClient) return;
+    const pagePt = this.clientToPage(this.mouseClient.x, this.mouseClient.y);
+    this.showEraserPreview(pagePt.x, pagePt.y);
+    this.renderDraft();
+  }
+
+  private finishEraserGesture(e: PointerEvent): void {
+    if (e.pointerType === "mouse") {
+      const rect = this.qs("[data-role=viewport]").getBoundingClientRect();
+      const inside =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+      if (inside) {
+        this.mouseInView = true;
+        this.mouseClient = { x: e.clientX, y: e.clientY };
+        const point = this.eventToPage(e);
+        this.showEraserPreview(point.x, point.y);
+        this.renderDraft();
+        return;
+      }
+      this.mouseInView = false;
+      this.mouseClient = null;
+      this.clearEraserPreview();
+      return;
+    }
+    if (this.mouseInView && this.mouseClient) {
+      const pagePt = this.clientToPage(this.mouseClient.x, this.mouseClient.y);
+      this.showEraserPreview(pagePt.x, pagePt.y);
+      this.renderDraft();
+      return;
+    }
+    this.fadeEraserPreview();
+  }
+
+  private fadeEraserPreview(): void {
+    this.cancelEraserFade();
+    if (!this.eraserPreview) return;
+    const start = performance.now();
+    const duration = 150;
+    const step = (now: number) => {
+      if (!this.root.isConnected) return;
+      const t = Math.min(1, (now - start) / duration);
+      this.eraserPreviewAlpha = 1 - t;
+      this.renderDraft();
+      if (t < 1) {
+        this.eraserFadeRaf = requestAnimationFrame(step);
+      } else {
+        this.eraserFadeRaf = 0;
+        this.eraserPreview = null;
+        this.eraserPreviewAlpha = 1;
+        this.renderDraft();
+      }
+    };
+    this.eraserFadeRaf = requestAnimationFrame(step);
+  }
+
+  private cancelEraserFade(): void {
+    if (!this.eraserFadeRaf) return;
+    cancelAnimationFrame(this.eraserFadeRaf);
+    this.eraserFadeRaf = 0;
+  }
+
+  private clearEraserPreview(): void {
+    this.cancelEraserFade();
+    if (!this.eraserPreview && this.eraserPreviewAlpha === 1) return;
+    this.eraserPreview = null;
+    this.eraserPreviewAlpha = 1;
+    this.renderDraft();
+  }
+
+  private clientToPage(clientX: number, clientY: number): { x: number; y: number } {
+    const rect = this.qs("[data-role=viewport]").getBoundingClientRect();
+    return screenToPage(this.view, clientX - rect.left, clientY - rect.top);
   }
 
   private async goPage(index: number): Promise<void> {
@@ -913,19 +1131,59 @@ class Editor {
     this.syncHistoryButtons();
   }
 
-  private async persistHistory(
-    action: import("../types").HistoryAction,
-    dir: "undo" | "redo",
-  ): Promise<void> {
+  private async persistHistory(action: HistoryAction, dir: "undo" | "redo"): Promise<void> {
     if (action.type === "add") {
       if (dir === "undo") await deleteStrokes(this.db, [action.stroke.id]);
       else await putStroke(this.db, action.stroke);
+    } else if (action.type === "remove") {
+      if (dir === "undo") {
+        for (const stroke of action.strokes) await putStroke(this.db, stroke);
+      } else {
+        await deleteStrokes(
+          this.db,
+          action.strokes.map((stroke) => stroke.id),
+        );
+      }
     } else if (dir === "undo") {
-      for (const stroke of action.strokes) await putStroke(this.db, stroke);
+      await deleteStrokes(
+        this.db,
+        action.added.map((stroke) => stroke.id),
+      );
+      for (const stroke of action.removed) await putStroke(this.db, stroke);
     } else {
-      await deleteStrokes(this.db, action.strokes.map((s) => s.id));
+      await deleteStrokes(
+        this.db,
+        action.removed.map((stroke) => stroke.id),
+      );
+      for (const stroke of action.added) await putStroke(this.db, stroke);
     }
     await touchNotebook(this.db, this.notebookId);
+  }
+}
+
+function sameStrokeRefs(next: Stroke[], current: Stroke[]): boolean {
+  if (next.length !== current.length) return false;
+  for (let i = 0; i < next.length; i++) {
+    if (next[i] !== current[i]) return false;
+  }
+  return true;
+}
+
+const ERASER_RADIUS_STORAGE_KEY = "freenotes-eraser-radius";
+
+function readEraserRadius(): number {
+  try {
+    return eraserRadiusFromStorage(localStorage.getItem(ERASER_RADIUS_STORAGE_KEY));
+  } catch {
+    return ERASER_RADII[1];
+  }
+}
+
+function writeEraserRadius(radius: number): void {
+  try {
+    localStorage.setItem(ERASER_RADIUS_STORAGE_KEY, String(radius));
+  } catch {
+    /* private mode or a full quota: the in-memory radius still applies */
   }
 }
 

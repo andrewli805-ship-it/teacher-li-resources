@@ -43,7 +43,19 @@ export interface Stroke {
 
 export type HistoryAction =
   | { type: "add"; pageId: string; stroke: Stroke }
-  | { type: "remove"; pageId: string; strokes: Stroke[] };
+  | { type: "remove"; pageId: string; strokes: Stroke[] }
+  | {
+      type: "replace";
+      pageId: string;
+      /** Pre-gesture strokes that were split or fully erased. */
+      removed: Stroke[];
+      /** Remnants that replace them, in paint order. */
+      added: Stroke[];
+      /** Index of each `removed` stroke in the page array before the gesture. */
+      at: number[];
+      /** How many `added` strokes replace each `removed` stroke (0 if fully erased). */
+      counts: number[];
+    };
 
 export interface BackgroundRecord {
   pageId: string;
@@ -81,3 +93,15 @@ export const A4_HEIGHT = 1123;
 
 export const PEN_WIDTHS = [1.6, 2.8, 4.8] as const;
 export const HIGHLIGHTER_WIDTHS = [10, 16, 24] as const;
+
+/** Eraser tip radius in page pixels. The preview circle is this radius. */
+export const ERASER_RADII = [6, 10, 18] as const;
+export type EraserRadius = (typeof ERASER_RADII)[number];
+
+const ERASER_RADIUS_VALUES = new Set<string>(["6", "10", "18"]);
+
+/** Accept only `"6"`, `"10"`, and `"18"`. Anything else is the mid radius, 10. */
+export function eraserRadiusFromStorage(raw: string | null | undefined): EraserRadius {
+  if (raw != null && ERASER_RADIUS_VALUES.has(raw)) return Number(raw) as EraserRadius;
+  return 10;
+}

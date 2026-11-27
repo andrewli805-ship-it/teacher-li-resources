@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Stroke } from "../types";
-import { distToSegment, simplifyPoints, strokeHitsPath, strokeHitsPoint } from "./geometry";
+import { distToSegment, simplifyPoints, strokeHitsPoint } from "./geometry";
 
 function stroke(points: { x: number; y: number }[], width = 4): Stroke {
   return {
@@ -32,20 +32,6 @@ describe("strokeHitsPoint", () => {
     ]);
     expect(strokeHitsPoint(s, 20, 2, 0)).toBe(true);
     expect(strokeHitsPoint(s, 20, 40, 0)).toBe(false);
-  });
-});
-
-describe("strokeHitsPath", () => {
-  it("detects an eraser path crossing a stroke", () => {
-    const s = stroke([
-      { x: 0, y: 20 },
-      { x: 80, y: 20 },
-    ]);
-    const path = [
-      { x: 40, y: 0, p: 0.5, t: 0 },
-      { x: 40, y: 40, p: 0.5, t: 1 },
-    ];
-    expect(strokeHitsPath(s, path, 2)).toBe(true);
   });
 });
 

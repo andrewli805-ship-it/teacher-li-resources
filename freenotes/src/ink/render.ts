@@ -61,6 +61,14 @@ export function renderStrokes(
   for (const stroke of strokes) drawStroke(ctx, stroke);
 }
 
+/** Radius of a one-point pen or highlighter dot, matching `drawStroke`. */
+export function visibleDotRadius(stroke: Pick<Stroke, "tool" | "width" | "points">): number {
+  if (stroke.tool === "highlighter") return stroke.width / 2;
+  const pressure = stroke.points[0]?.p ?? 0;
+  const r = (stroke.width * (0.4 + 0.6 * clampPressure(pressure))) / 2;
+  return Math.max(r, 0.6);
+}
+
 export function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void {
   const pts = stroke.points;
   if (pts.length === 0) return;
@@ -74,16 +82,21 @@ export function drawStroke(ctx: CanvasRenderingContext2D, stroke: Stroke): void 
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = stroke.width;
-    strokePath(ctx, pts);
+    if (pts.length === 1) {
+      ctx.beginPath();
+      ctx.arc(pts[0].x, pts[0].y, visibleDotRadius(stroke), 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      strokePath(ctx, pts);
+    }
   } else {
     ctx.strokeStyle = stroke.color;
     ctx.fillStyle = stroke.color;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     if (pts.length === 1) {
-      const r = (stroke.width * (0.4 + 0.6 * clampPressure(pts[0].p))) / 2;
       ctx.beginPath();
-      ctx.arc(pts[0].x, pts[0].y, Math.max(r, 0.6), 0, Math.PI * 2);
+      ctx.arc(pts[0].x, pts[0].y, visibleDotRadius(stroke), 0, Math.PI * 2);
       ctx.fill();
     } else {
       drawVariableStroke(ctx, stroke);
